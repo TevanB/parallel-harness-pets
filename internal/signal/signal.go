@@ -22,7 +22,10 @@ import (
 
 // Collect runs every enabled signal and returns the cache the renderer will read.
 func Collect(repo gitrepo.Repo, settings config.Config, now time.Time) state.State {
-	collected := state.State{External: map[string]int{}, Stamp: now}
+	collected := state.State{
+		External: map[string]int{}, Stamp: now,
+		Root: repo.Root, Branch: repo.Branch,
+	}
 	trunk := gitrepo.DefaultBranch(repo.Root, settings.Branch.Default)
 
 	if settings.SignalEnabled("dirty") {
@@ -44,6 +47,19 @@ func Collect(repo gitrepo.Repo, settings config.Config, now time.Time) state.Sta
 		collected.External[name] = value
 	}
 	return collected
+}
+
+// Earned reports whether a worktree has done enough to enter the den.
+//
+// Identity comes from a name the user chooses, so a scripted checkout -b loop
+// could otherwise mine for mythics. Requiring one commit prices that at a commit
+// per roll and keeps the den a record of branches where work actually happened.
+func Earned(repo gitrepo.Repo, settings config.Config) bool {
+	trunk := gitrepo.DefaultBranch(repo.Root, settings.Branch.Default)
+	if strings.HasSuffix(trunk, "/"+repo.Branch) {
+		return true
+	}
+	return countNumber(git(repo.Root, "rev-list", "--count", trunk+"..HEAD")) > 0
 }
 
 func git(root string, args ...string) string {

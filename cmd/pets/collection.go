@@ -1,0 +1,91 @@
+package main
+
+import (
+	"fmt"
+	"os"
+	"path/filepath"
+	"time"
+
+	"github.com/TevanB/parallel-harness-pets/internal/config"
+	"github.com/TevanB/parallel-harness-pets/internal/den"
+	"github.com/TevanB/parallel-harness-pets/internal/gitrepo"
+	"github.com/TevanB/parallel-harness-pets/internal/identity"
+	"github.com/TevanB/parallel-harness-pets/internal/render"
+	"github.com/TevanB/parallel-harness-pets/internal/score"
+	"github.com/TevanB/parallel-harness-pets/internal/signal"
+	"github.com/TevanB/parallel-harness-pets/internal/state"
+)
+
+func denCommand() {
+	fmt.Print(render.Den(den.Load(config.StateDir())))
+}
+
+// partyCommand shows every worktree the cache knows about that still exists.
+func partyCommand() {
+	settings := config.Load()
+	cacheDir := config.StateDir()
+	now := time.Now()
+
+	var views []render.View
+	for _, current := range state.All(cacheDir) {
+		repo, found := gitrepo.Locate(current.Root)
+		if !found {
+			continue
+		}
+		tests := state.ReadTests(cacheDir, repo.Key(), now)
+		views = append(views, render.View{
+			Pet:      identity.For(repo.Branch),
+			Branch:   repo.Branch,
+			Root:     repo.Root,
+			State:    current,
+			Tests:    tests,
+			Score:    score.Of(current, tests, settings),
+			HasState: true,
+		})
+	}
+	fmt.Print(render.Party(views, settings))
+}
+
+// hatchMarker records that a worktree has already been greeted, so the hatch
+// fires exactly once per worktree rather than once per session.
+func hatchMarker(cacheDir, key string) string {
+	return filepath.Join(cacheDir, key+".hatched")
+}
+
+// hatchCommand runs on SessionStart. It is the only animated moment in the tool.
+func hatchCommand() {
+	settings := config.Load()
+	payload := readPayload()
+	repo, found := gitrepo.Locate(payload.directory())
+	if !found {
+		return
+	}
+	cacheDir := config.StateDir()
+	if err := os.MkdirAll(cacheDir, 0o755); err != nil {
+		return
+	}
+	marker := hatchMarker(cacheDir, repo.Key())
+	if _, err := os.Stat(marker); err == nil {
+		return
+	}
+	os.WriteFile(marker, []byte(time.Now().Format(time.RFC3339)+"\n"), 0o644)
+
+	pet := identity.For(repo.Branch)
+	collection := den.Load(cacheDir)
+	position := len(collection.Entries) + 1
+	if collection.Has(pet) {
+		position = len(collection.Entries)
+	}
+	fmt.Print(render.Hatch(pet, position, len(identity.All())))
+
+	// Recording is separate from showing: the hatch is free, but the den entry
+	// has to be earned, or a checkout -b loop farms the collection.
+	recordIfEarned(repo, settings, cacheDir)
+}
+
+func recordIfEarned(repo gitrepo.Repo, settings config.Config, cacheDir string) {
+	if !signal.Earned(repo, settings) {
+		return
+	}
+	den.Record(cacheDir, identity.For(repo.Branch), repo.Branch, time.Now())
+}

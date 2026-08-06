@@ -12,6 +12,44 @@ Most terminal pets belong to *you*: one creature, nurtured over time, with
 affection to decay and XP to grind. This one belongs to a **worktree**. Six
 worktrees means six creatures alive at once, which is the whole point.
 
+## The party
+
+One screen, every live worktree, and the worst thing wrong across all of them.
+
+```
+  pets party                                  6 alive
+
+  /<•_•>\   cat  ✦     spike/wasm-build      ♥♥♡♡♡  22△ 1↑
+  {•_•}     fox  ✦     chore/bump-deps       ♥♥♥♥♡  1↑
+  o[•_•]o   seal ✦✦✦   docs/install-rewrite  ♥♥♥♥♡  1↑
+  <•_•>     moth ✦     feat/checkout-flow    ♥♥♥♥♡  1↑
+  o[•_•]o   seal ✦✦✦   fix/session-leak      ♥♥♥♥♡  1↑
+  <@_@>     moth ✦     refactor/auth-guard   ♥♡♡♡♡  41△ 13↑
+
+  worst: moth · uncommitted, unpushed
+```
+
+Two seals and two moths, at different colours, still read apart.
+
+## The collection
+
+Opening a branch you have never opened before hatches its creature. Species are
+banded by rarity, and the bands hold no matter how many creatures exist:
+
+| Band | Odds | |
+|---|---|---|
+| common | 60% | `✦` |
+| uncommon | 25% | `✦✦` |
+| rare | 11% | `✦✦✦` |
+| legendary | 3.5% | `✦✦✦✦` |
+| mythic | 0.5% | `✦✦✦✦✦` |
+
+Shiny is an independent roll at 1 in 128, so a shiny common is its own find.
+
+`pets den` shows what you have. The only way to roll is to open a new worktree,
+and a creature only enters the den once that worktree has a commit, so the
+collection stays a record of branches where work actually happened.
+
 ## Why
 
 Two problems, one status line.
@@ -126,6 +164,9 @@ Three seams, and a cache between them.
 | `pets record` | `PostToolUse` hook | Record a test verdict when output states one |
 | `pets quip` | `Stop` hook | Say one line about the worst signal |
 | `pets card` | on demand | Full readout with penalties called out |
+| `pets hatch` | `SessionStart` hook | Greet a worktree opened for the first time |
+| `pets party` | on demand | Every live worktree at once |
+| `pets den` | on demand | The collection |
 
 The split matters. A one second refresh across several sessions cannot afford
 `git status`, so the renderer only reads two small files and the expensive work

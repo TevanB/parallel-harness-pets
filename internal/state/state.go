@@ -28,6 +28,10 @@ type State struct {
 	Migrations int
 	External   map[string]int
 	Stamp      time.Time
+	// Root is stored rather than decoded from the cache key, because a path
+	// containing an underscore cannot be recovered from the flattened key.
+	Root   string
+	Branch string
 }
 
 func (s State) Stale(now time.Time) bool {
@@ -64,6 +68,10 @@ func Read(dir, key string) (State, bool) {
 			loaded.Migrations = atoi(value)
 		case "ts":
 			loaded.Stamp = time.Unix(int64(atoi(value)), 0)
+		case "root":
+			loaded.Root = value
+		case "branch":
+			loaded.Branch = value
 		default:
 			loaded.External[name] = atoi(value)
 		}
@@ -86,8 +94,36 @@ func Write(dir, key string, value State) error {
 	for _, name := range names {
 		fmt.Fprintf(&builder, "%s=%d\n", name, value.External[name])
 	}
-	fmt.Fprintf(&builder, "ts=%d\n", value.Stamp.Unix())
+	fmt.Fprintf(&builder, "root=%s\nbranch=%s\nts=%d\n", value.Root, value.Branch, value.Stamp.Unix())
 	return replace(filepath.Join(dir, key+".state"), builder.String())
+}
+
+// All returns every worktree the cache knows about, newest first, skipping any
+// whose directory has since been deleted.
+func All(dir string) []State {
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		return nil
+	}
+	var found []State
+	for _, entry := range entries {
+		name := strings.TrimSuffix(entry.Name(), ".state")
+		if name == entry.Name() {
+			continue
+		}
+		loaded, ok := Read(dir, name)
+		if !ok || loaded.Root == "" {
+			continue
+		}
+		if info, err := os.Stat(loaded.Root); err != nil || !info.IsDir() {
+			continue
+		}
+		found = append(found, loaded)
+	}
+	sort.Slice(found, func(first, second int) bool {
+		return found[first].Stamp.After(found[second].Stamp)
+	})
+	return found
 }
 
 // Test verdicts live in their own file so the probe and the tool hook never

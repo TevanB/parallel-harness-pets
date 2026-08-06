@@ -156,6 +156,7 @@ func InstallClaude(binary string, remove bool) error {
 		}
 		setHook(settings, "PostToolUse", "", "")
 		setHook(settings, "Stop", "", "")
+		setHook(settings, "SessionStart", "", "")
 	} else {
 		settings["statusLine"] = map[string]any{
 			"type": "command", "command": binary + " render",
@@ -163,6 +164,7 @@ func InstallClaude(binary string, remove bool) error {
 		}
 		setHook(settings, "PostToolUse", binary+" record", "Bash")
 		setHook(settings, "Stop", binary+" quip", "")
+		setHook(settings, "SessionStart", binary+" hatch", "")
 	}
 	return saveJSON(path, settings)
 }
@@ -182,9 +184,11 @@ func InstallCodex(binary string, remove bool) error {
 	if remove {
 		setHook(settings, "PostToolUse", "", "")
 		setHook(settings, "Stop", "", "")
+		setHook(settings, "SessionStart", "", "")
 	} else {
 		setHook(settings, "PostToolUse", binary+" record", "Bash")
 		setHook(settings, "Stop", binary+" quip", "")
+		setHook(settings, "SessionStart", binary+" hatch", "")
 	}
 	return saveJSON(path, settings)
 }

@@ -25,8 +25,11 @@ var version = "dev"
 const usage = `pets - a creature for every worktree
 
   pets render [--format=statusline|tmux|title|json]  render for a surface
+  pets party                                         every live worktree at once
+  pets den                                           the collection
   pets card [path]                                   full readout
   pets probe <path>                                  refresh one worktree's cache
+  pets hatch                                         session-start hook, reads JSON on stdin
   pets record                                        tool-use hook, reads JSON on stdin
   pets quip                                          stop hook, reads JSON on stdin
   pets install [--harness=claude|codex|tmux|shell|all]
@@ -42,10 +45,16 @@ func main() {
 	switch os.Args[1] {
 	case "render":
 		renderCommand(os.Args[2:])
+	case "party":
+		partyCommand()
+	case "den":
+		denCommand()
 	case "card":
 		cardCommand(os.Args[2:])
 	case "probe":
 		probeCommand(os.Args[2:])
+	case "hatch":
+		hatchCommand()
 	case "record":
 		recordCommand()
 	case "quip":
@@ -241,6 +250,9 @@ func probe(root string, settings config.Config) {
 	}
 	defer os.Remove(lock)
 	state.Write(cacheDir, repo.Key(), signal.Collect(repo, settings, time.Now()))
+	// A branch earns its den entry on its first commit, which may be long after
+	// the hatch, so the probe is where that gets noticed.
+	recordIfEarned(repo, settings, cacheDir)
 }
 
 func recordCommand() {
