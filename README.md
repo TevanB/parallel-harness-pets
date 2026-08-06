@@ -4,8 +4,8 @@ A per-worktree familiar for Claude Code. It lives in the status line, its specie
 is a pure function of the branch name, and its mood tracks branch hygiene.
 
 ```
->(•ᴗ•)<  crab · feat/oauth-refresh  ♥♥♥♥♥                 ·  Opus 5
-[@_@]    frog · refactor/auth-guard  ♥♡♡♡♡  28△ 27↑      ·  Opus 5
+((•ᴗ•))  owl  · feat/checkout-flow  ♥♥♥♥♥             ·  Opus 5
+[@_@]    frog · fix/session-leak  ♥♡♡♡♡  28△ 27↑      ·  Opus 5
 ```
 
 ## Why
