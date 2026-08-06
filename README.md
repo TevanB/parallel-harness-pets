@@ -135,3 +135,9 @@ install.sh      copy into ~/.claude and patch settings.json
 
 Scripts resolve `lib.sh` relative to themselves, so a checkout can be run and
 tested in place without installing.
+
+## Coffee
+
+If the pet earned its keep, the developer takes payment in coffee.
+
+[![Buy me a coffee](https://img.shields.io/badge/buy_me_a_coffee-ffdd00?style=flat&logo=buymeacoffee&logoColor=black)](https://buymeacoffee.com/tevanb)
