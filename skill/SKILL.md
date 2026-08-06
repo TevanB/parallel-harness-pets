@@ -1,16 +1,16 @@
 ---
-name: buddy
-description: "Show this worktree's familiar and the branch-hygiene signals behind its mood. Use when the user types /buddy."
+name: pets
+description: "Show this worktree's creature and the branch-hygiene signals behind its mood. Use when the user types /pets."
 argument-hint: "[show|why]"
-allowed-tools: Bash(~/.claude/claude-buddy/card.sh:*)
+allowed-tools: Bash(pets:*)
 ---
 
-# Buddy
+# Pets
 
 Run the card and show it. Nothing else.
 
 ```sh
-~/.claude/claude-buddy/card.sh "$(pwd)"
+pets card
 ```
 
 ## Output rule
@@ -25,5 +25,6 @@ user picks or renames. If they ask why it changed, the answer is that the branch
 changed.
 
 If `$ARGUMENTS` is `why`, additionally name the signals shown in warning colour
-and, for each, the concrete command that clears it (`git commit`, `git push`,
-and for split migration heads, whatever that project uses to merge them).
+and, for each, the concrete command that clears it: `git commit` for
+uncommitted files, `git push` for unpushed commits, and for split migration
+heads, whatever that project uses to merge them.
