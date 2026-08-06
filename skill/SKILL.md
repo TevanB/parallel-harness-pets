@@ -26,4 +26,4 @@ changed.
 
 If `$ARGUMENTS` is `why`, additionally name the signals shown in warning colour
 and, for each, the concrete command that clears it (`git commit`, `git push`,
-`/fix-alembic-heads` for split alembic heads).
+and for split migration heads, whatever that project uses to merge them).

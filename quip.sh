@@ -23,8 +23,8 @@ pick() {
 }
 
 if [ "$BUDDY_HEADS" -gt 1 ]; then
-  line="$(pick "$BUDDY_HEADS alembic heads. that one never fixes itself." \
-    "$BUDDY_HEADS heads in versions/. dev_local is going to hate you.")"
+  line="$(pick "$BUDDY_HEADS migration heads. that one never fixes itself." \
+    "$BUDDY_HEADS heads in versions/. something is going to refuse to migrate.")"
 elif [ "$BUDDY_TESTS" = fail ]; then
   line="$(pick "tests are red." "last run failed. i saw it.")"
 elif [ "$BUDDY_UNPUSHED" -gt 5 ]; then

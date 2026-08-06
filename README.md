@@ -4,8 +4,8 @@ A per-worktree familiar for Claude Code. It lives in the status line, its specie
 is a pure function of the branch name, and its mood tracks branch hygiene.
 
 ```
->(•ᴗ•)<  crab · agent-task-1785874237  ♥♥♥♥♥            ·  Opus 5
-[@_@]    frog · DIL-3982-income-calculation  ♥♡♡♡♡  28△ 27↑  ·  Opus 5
+>(•ᴗ•)<  crab · feat/oauth-refresh  ♥♥♥♥♥                 ·  Opus 5
+[@_@]    frog · refactor/auth-guard  ♥♡♡♡♡  28△ 27↑      ·  Opus 5
 ```
 
 ## Why
@@ -14,7 +14,7 @@ Two problems, one status line.
 
 **Telling sessions apart.** Running several Claude Code sessions across git
 worktrees means several near-identical fullscreen terminals. The branch name is
-long and the prefixes collide (`DIL-4118-...`, `DIL-4068-...`). A creature
+long and the prefixes collide (`feat/checkout-...`, `feat/checkout-v2-...`). A creature
 silhouette in a distinct colour is recognisable pre-consciously, before you read
 any text.
 
@@ -35,8 +35,10 @@ them in `~/.claude/settings.json`. It backs up that file first and is safe to
 re-run. Start a new session afterwards, since Claude Code reads the status line
 and hook config at startup.
 
-Requires `bash`, `git`, and `jq`. Deliberately no MCP server and no Node
-dependency, so nothing has to boot for the pet to exist.
+Requires `bash`, `git`, `jq`, and `python3` (the installer uses it to patch
+`settings.json`). Note that neither `jq` nor `python3` ships by default on
+macOS. Deliberately no MCP server and no Node dependency, so nothing has to
+boot for the pet to exist.
 
 ## Reading it
 
@@ -99,6 +101,14 @@ from a status line script.
 each having one head is healthy. Summing gives 2 and cries wolf on a clean
 repo, so `probe.sh` takes the worst single tree.
 
+**The migration check currently only matches nested layouts.** `probe.sh` globs
+`*/alembic/versions` and `*/*/migrations/versions`, so a repo with
+`alembic/versions` at its root is never matched and the signal silently reports
+zero. It was written against one monorepo and has not been generalised yet.
+Until it is, treat it as off unless your layout happens to match — and note that
+split heads cost 2 of the 5 hearts, which is a large penalty for a signal most
+projects cannot produce at all.
+
 **Test verdicts are never inferred.** `PostToolUse` does not hand a hook the
 exit code, so `record.sh` only believes a runner that states its result outright
 (`== 3 failed`, `Found 7 errors`, `All checks passed`). Anything else leaves the
@@ -135,6 +145,10 @@ install.sh      copy into ~/.claude and patch settings.json
 
 Scripts resolve `lib.sh` relative to themselves, so a checkout can be run and
 tested in place without installing.
+
+## Licence
+
+MIT. See [LICENSE](LICENSE).
 
 ## Coffee
 
