@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/TevanB/parallel-harness-pets/internal/config"
@@ -294,11 +295,40 @@ func recordCommand() {
 	if !found {
 		return
 	}
-	result, ok := verdict.Of(payload.ToolInput.Command, string(payload.ToolResponse))
+	result, ok := verdict.Of(payload.ToolInput.Command, responseText(payload.ToolResponse))
 	if !ok {
 		return
 	}
 	state.WriteTests(config.StateDir(), repo.Key(), result, time.Now())
+}
+
+// responseText decodes what a runner actually printed.
+//
+// Casting the raw message to a string yields JSON source: quotes included and
+// newlines still written as backslash-n. Substring checks survive that, but
+// anything anchored to a line never matches, so the text has to be decoded.
+// Harnesses send either a bare string or an object carrying stdout and stderr.
+func responseText(raw json.RawMessage) string {
+	if len(raw) == 0 {
+		return ""
+	}
+	var text string
+	if json.Unmarshal(raw, &text) == nil {
+		return text
+	}
+	var fields map[string]any
+	if json.Unmarshal(raw, &fields) == nil {
+		var parts []string
+		for _, key := range []string{"stdout", "stderr", "output", "content", "result"} {
+			if value, isText := fields[key].(string); isText && value != "" {
+				parts = append(parts, value)
+			}
+		}
+		if len(parts) > 0 {
+			return strings.Join(parts, "\n")
+		}
+	}
+	return string(raw)
 }
 
 func quipCommand() {

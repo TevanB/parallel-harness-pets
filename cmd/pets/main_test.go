@@ -1,10 +1,13 @@
 package main
 
 import (
+	"encoding/json"
 	"io"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/TevanB/parallel-harness-pets/internal/verdict"
 )
 
 // blockingReader never reaches EOF, which is what tmux can hand a command it
@@ -90,5 +93,37 @@ func TestFlagValue(t *testing.T) {
 	}
 	if got := flagValue(args, "missing", "fallback"); got != "fallback" {
 		t.Errorf("missing flag = %q, want the fallback", got)
+	}
+}
+
+// A raw cast yields JSON source, where a newline is still a backslash and an n.
+// Substring checks survive that; anything anchored to a line never matches.
+func TestResponseTextDecodesWhatTheRunnerPrinted(t *testing.T) {
+	cases := []struct {
+		name string
+		raw  string
+		want string
+	}{
+		{"bare string", `"ok  \tgithub.com/x/y\t0.1s\n"`, "ok  \tgithub.com/x/y\t0.1s\n"},
+		{"object with stdout", `{"stdout":"PASS\n","stderr":"","interrupted":false}`, "PASS\n"},
+		{"object with both streams", `{"stdout":"ok\n","stderr":"warning\n"}`, "ok\n\nwarning\n"},
+		{"empty", ``, ""},
+	}
+	for _, testCase := range cases {
+		t.Run(testCase.name, func(t *testing.T) {
+			if got := responseText(json.RawMessage(testCase.raw)); got != testCase.want {
+				t.Errorf("responseText(%s) = %q, want %q", testCase.raw, got, testCase.want)
+			}
+		})
+	}
+}
+
+// The end-to-end shape a harness actually sends: a green Go run has to clear a
+// previous failure, which it cannot do while the text is still JSON-escaped.
+func TestGreenGoRunIsRecognisedThroughAHarnessPayload(t *testing.T) {
+	raw := json.RawMessage(`{"stdout":"ok  \tgithub.com/x/y\t0.101s\nok  \tgithub.com/x/z\t(cached)\n","stderr":""}`)
+	result, ok := verdict.Of("go test ./...", responseText(raw))
+	if !ok || result != "pass" {
+		t.Errorf("green go run through a harness payload = %q/%v, want pass/true", result, ok)
 	}
 }

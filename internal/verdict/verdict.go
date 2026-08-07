@@ -36,6 +36,11 @@ var passes = []string{
 	"0 failures", "no issues found", "Success: no issues",
 }
 
+// countedPasses are clean results a runner reports positionally rather than in
+// prose. Go prints "ok <package> <time>" per package and "PASS" alone, and
+// matching neither leaves a fixed failure showing red until the verdict decays.
+var countedPasses = regexp.MustCompile(`(?m)^(ok\s+\S+|PASS)\s*$|^ok\s+\S+\s+[\d.]+m?s`)
+
 // IsTestRun reports whether a command looks like a test or lint invocation.
 func IsTestRun(command string) bool {
 	lowered := strings.ToLower(command)
@@ -70,6 +75,9 @@ func Read(output string) (string, bool) {
 		if strings.Contains(output, phrase) {
 			return "pass", true
 		}
+	}
+	if countedPasses.MatchString(output) {
+		return "pass", true
 	}
 	return "", false
 }

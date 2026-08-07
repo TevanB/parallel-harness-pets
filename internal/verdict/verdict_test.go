@@ -31,7 +31,7 @@ func TestOfReadsRealRunnerOutput(t *testing.T) {
 		{"cargo failure", "cargo test", "test result: FAILED. 2 passed; 1 failed", "fail", true},
 		{"cargo success", "cargo test", "test result: ok. 14 passed; 0 failed", "pass", true},
 		{"go failure", "go test ./...", "--- FAIL: TestThing (0.00s)\nFAIL", "fail", true},
-		{"go success", "go test ./...", "ok  \tgithub.com/x/y\t0.1s\n", "", false},
+		{"go success", "go test ./...", "ok  \tgithub.com/x/y\t0.101s\n", "pass", true},
 		{"tsc failure", "tsc --noEmit", "src/a.ts(3,1): error TS2304: Cannot find name", "fail", true},
 		{"ruff success", "ruff check .", "All checks passed!", "pass", true},
 		{"not a test run", "ls -la", "3 failed", "", false},
@@ -83,5 +83,39 @@ func TestRecognisesNonPythonJavaScriptRunners(t *testing.T) {
 		if !IsTestRun(command) {
 			t.Errorf("IsTestRun(%q) = false, want true", command)
 		}
+	}
+}
+
+// A green run has to clear a red one. Go reports success positionally rather
+// than in prose, so matching only phrases left a fixed failure showing red for
+// the full two-hour decay window: the fix-verify loop never cleared the flag.
+func TestGreenRunClearsAPreviousFailure(t *testing.T) {
+	green := []string{
+		"ok  \tgithub.com/x/y\t0.101s\n",
+		"ok  \tgithub.com/x/y\t(cached)\nok  \tgithub.com/x/z\t1.2s\n",
+		"PASS\n",
+	}
+	for _, output := range green {
+		got, ok := Of("go test ./...", output)
+		if !ok || got != "pass" {
+			t.Errorf("Of(go test, %q) = %q/%v, want pass/true", output, got, ok)
+		}
+	}
+}
+
+// The positional match must not fire on prose that merely starts with "ok".
+func TestPositionalPassDoesNotOverreach(t *testing.T) {
+	for _, output := range []string{"okay then", "ok", "looks ok to me", "not ok"} {
+		if got, ok := Of("go test ./...", output); ok {
+			t.Errorf("Of(go test, %q) recorded %q, want nothing", output, got)
+		}
+	}
+}
+
+// A run with both failures and passing packages is still a failure.
+func TestMixedGoOutputIsAFailure(t *testing.T) {
+	mixed := "ok  \tgithub.com/x/y\t0.1s\n--- FAIL: TestThing\nFAIL\tgithub.com/x/z\t0.2s\n"
+	if got, _ := Of("go test ./...", mixed); got != "fail" {
+		t.Errorf("mixed go output read as %q, want fail", got)
 	}
 }
