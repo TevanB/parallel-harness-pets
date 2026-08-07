@@ -3,6 +3,7 @@ package gitrepo
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -78,10 +79,47 @@ func TestLocateOutsideAnyRepo(t *testing.T) {
 	}
 }
 
-func TestKeyIsFilenameSafe(t *testing.T) {
-	key := Repo{Root: "/Users/x/code/my-repo"}.Key()
-	if filepath.Base(key) != key {
-		t.Errorf("Key() = %q, which is not a single path segment", key)
+// A cache key becomes a filename, so it must survive every platform's rules.
+// Replacing only the path separator left the Windows drive colon in place, and
+// a colon cannot appear in a Windows filename at all.
+func TestKeyIsFilenameSafeOnEveryPlatform(t *testing.T) {
+	roots := []string{
+		"/Users/x/code/my-repo",
+		`C:\Users\x\code\my-repo`,
+		"/tmp/repo with spaces/and:colons",
+		"/",
+	}
+	illegal := `<>:"/\|?*`
+	for _, root := range roots {
+		key := Repo{Root: root}.Key()
+		if key == "" {
+			t.Errorf("Key() for %q is empty", root)
+		}
+		if strings.ContainsAny(key, illegal) {
+			t.Errorf("Key() for %q = %q, which contains an illegal filename character", root, key)
+		}
+		if filepath.Base(key) != key {
+			t.Errorf("Key() for %q = %q, which is not a single path segment", root, key)
+		}
+		if len(key) > 128 {
+			t.Errorf("Key() for %q is %d bytes, too long for some filesystems", root, len(key))
+		}
+	}
+}
+
+// Two paths that sanitise to the same text must not share a cache entry.
+func TestKeyDistinguishesPathsThatSanitiseAlike(t *testing.T) {
+	first := Repo{Root: "/a/b-c"}.Key()
+	second := Repo{Root: "/a_b/c"}.Key()
+	if first == second {
+		t.Errorf("distinct roots collapsed onto one key: %q", first)
+	}
+}
+
+func TestKeyIsStable(t *testing.T) {
+	root := "/Users/x/code/my-repo"
+	if (Repo{Root: root}).Key() != (Repo{Root: root}).Key() {
+		t.Error("Key() is not stable, so the cache would be rewritten every call")
 	}
 }
 

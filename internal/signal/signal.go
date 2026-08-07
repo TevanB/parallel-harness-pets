@@ -11,6 +11,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"regexp"
+	"runtime"
 	"strconv"
 	"strings"
 	"time"
@@ -181,8 +182,7 @@ func runExternal(root string, settings config.External) map[string]int {
 		if entry.IsDir() {
 			continue
 		}
-		info, err := entry.Info()
-		if err != nil || info.Mode()&0o111 == 0 {
+		if !runnable(entry) {
 			continue
 		}
 		ctx, cancel := context.WithTimeout(context.Background(), timeout)
@@ -201,6 +201,22 @@ func runExternal(root string, settings config.External) map[string]int {
 		}
 	}
 	return results
+}
+
+// runnable decides whether a file in the signals directory should be executed.
+//
+// Windows has no execute bit, so requiring one there would silently ignore
+// every user-supplied signal on that platform.
+func runnable(entry os.DirEntry) bool {
+	if runtime.GOOS == "windows" {
+		switch strings.ToLower(filepath.Ext(entry.Name())) {
+		case ".exe", ".bat", ".cmd", ".ps1", ".com":
+			return true
+		}
+		return false
+	}
+	info, err := entry.Info()
+	return err == nil && info.Mode()&0o111 != 0
 }
 
 func expandHome(path string) string {

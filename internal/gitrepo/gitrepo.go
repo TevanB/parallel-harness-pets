@@ -5,6 +5,8 @@
 package gitrepo
 
 import (
+	"fmt"
+	"hash/fnv"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -63,9 +65,33 @@ func read(root, gitDir string) (Repo, bool) {
 	return Repo{Root: root, GitDir: gitDir, Branch: branch}, true
 }
 
-// Key turns a worktree path into a filename safe for the cache directory.
+// Key turns a worktree path into a filename safe on every platform.
+//
+// Replacing only the path separator is not enough: on Windows that leaves the
+// drive colon in place, and `< > : " / \ | ? *` are all illegal in a filename,
+// so the cache file could never be created. Anything outside the safe set is
+// folded to an underscore, and an FNV suffix keeps two paths that sanitise
+// alike from sharing one cache entry.
 func (r Repo) Key() string {
-	return strings.ReplaceAll(strings.TrimPrefix(r.Root, string(filepath.Separator)), string(filepath.Separator), "_")
+	var flat strings.Builder
+	for _, char := range r.Root {
+		switch {
+		case char >= 'a' && char <= 'z', char >= 'A' && char <= 'Z',
+			char >= '0' && char <= '9', char == '-', char == '.':
+			flat.WriteRune(char)
+		default:
+			flat.WriteRune('_')
+		}
+	}
+	trimmed := strings.Trim(flat.String(), "_")
+	// Keep the tail, which is the part a human recognises, and stay well inside
+	// the 255-byte limit most filesystems impose.
+	if len(trimmed) > 80 {
+		trimmed = trimmed[len(trimmed)-80:]
+	}
+	digest := fnv.New32a()
+	digest.Write([]byte(r.Root))
+	return fmt.Sprintf("%s-%08x", trimmed, digest.Sum32())
 }
 
 // DefaultBranch resolves what this repo calls its trunk, so master and trunk
