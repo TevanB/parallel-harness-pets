@@ -30,7 +30,7 @@ func rarityHue(rarity identity.Rarity) string {
 
 // Party is the view no single-pet companion can render: every live worktree at
 // once, with the worst signal across all of them called out at the bottom.
-func Party(views []View, settings config.Config) string {
+func Party(views []View, settings config.Config, showAll bool) string {
 	if len(views) == 0 {
 		return fmt.Sprintf("%s(-.-) no worktrees seen yet. open one.%s\n", dim, reset)
 	}
@@ -43,9 +43,19 @@ func Party(views []View, settings config.Config) string {
 		return views[first].Branch < views[second].Branch
 	})
 
+	// Sorted worst-first, so anything hidden is healthy by construction. Without
+	// this a machine running two dozen worktrees prints a wall of identical
+	// full-health rows and scrolls the one that needs attention off the top.
+	alive := len(views)
+	hidden := 0
+	if limit := settings.Display.PartyLimit; !showAll && limit > 0 && alive > limit {
+		hidden = alive - limit
+		views = views[:limit]
+	}
+
 	var out strings.Builder
 	fmt.Fprintf(&out, "\n  %spets party%s%s%s%d alive%s\n\n",
-		label, reset, strings.Repeat(" ", 34), dim, len(views), reset)
+		label, reset, strings.Repeat(" ", 34), dim, alive, reset)
 
 	widestSpecies, widestBranch := 0, 0
 	for _, view := range views {
@@ -76,6 +86,15 @@ func Party(views []View, settings config.Config) string {
 			fmt.Fprintf(&out, "  %s%s%s", warn, strings.Join(flags, " "), reset)
 		}
 		fmt.Fprintln(&out)
+	}
+
+	if hidden > 0 {
+		healthiest := views[len(views)-1].Score.Hearts
+		note := fmt.Sprintf("and %d more", hidden)
+		if healthiest >= score.Max {
+			note = fmt.Sprintf("and %d more, all at full health", hidden)
+		}
+		fmt.Fprintf(&out, "  %s%s · pets party --all%s\n", dim, note, reset)
 	}
 
 	if len(worst.Score.Penalties) > 0 {

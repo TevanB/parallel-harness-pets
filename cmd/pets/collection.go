@@ -21,7 +21,7 @@ func denCommand() {
 }
 
 // partyCommand shows every worktree the cache knows about that still exists.
-func partyCommand() {
+func partyCommand(args []string) {
 	settings := config.Load()
 	cacheDir := config.StateDir()
 	now := time.Now()
@@ -46,7 +46,13 @@ func partyCommand() {
 			HasState: true,
 		})
 	}
-	fmt.Print(render.Party(views, settings))
+	showAll := false
+	for _, arg := range args {
+		if arg == "--all" {
+			showAll = true
+		}
+	}
+	fmt.Print(render.Party(views, settings, showAll))
 }
 
 // hatchMarker records that a worktree has already been greeted, so the hatch

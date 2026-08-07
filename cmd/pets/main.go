@@ -25,7 +25,7 @@ var version = "dev"
 const usage = `pets - a creature for every worktree
 
   pets render [--format=statusline|tmux|title|json]  render for a surface
-  pets party                                         every live worktree at once
+  pets party [--all]                                 every live worktree at once
   pets den                                           the collection
   pets card [path]                                   full readout
   pets probe <path>                                  refresh one worktree's cache
@@ -46,7 +46,7 @@ func main() {
 	case "render":
 		renderCommand(os.Args[2:])
 	case "party":
-		partyCommand()
+		partyCommand(os.Args[2:])
 	case "den":
 		denCommand()
 	case "card":

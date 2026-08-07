@@ -165,7 +165,7 @@ Three seams, and a cache between them.
 | `pets quip` | `Stop` hook | Say one line about the worst signal |
 | `pets card` | on demand | Full readout with penalties called out |
 | `pets hatch` | `SessionStart` hook | Greet a worktree opened for the first time |
-| `pets party` | on demand | Every live worktree at once |
+| `pets party` | on demand | Every live worktree at once, worst first (`--all` to skip the cap) |
 | `pets den` | on demand | The collection |
 
 The split matters. A one second refresh across several sessions cannot afford

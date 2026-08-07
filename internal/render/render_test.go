@@ -1,6 +1,7 @@
 package render
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 
@@ -65,7 +66,7 @@ func TestPartyColumnsAlign(t *testing.T) {
 		view("chore/deps-bump", 4, false),
 		view("spike/graphql", 1, false),
 	}
-	rendered := stripANSI(Party(views, config.Default()))
+	rendered := stripANSI(Party(views, config.Default(), false))
 
 	var starts []int
 	for _, line := range strings.Split(rendered, "\n") {
@@ -93,7 +94,7 @@ func TestPartySortsWorstFirst(t *testing.T) {
 		view("spike/graphql", 1, false),
 		view("feat/oauth-flow", 3, false),
 	}
-	rendered := stripANSI(Party(views, config.Default()))
+	rendered := stripANSI(Party(views, config.Default(), false))
 	positions := []int{
 		strings.Index(rendered, "spike/graphql"),
 		strings.Index(rendered, "feat/oauth-flow"),
@@ -108,7 +109,7 @@ func TestPartySortsWorstFirst(t *testing.T) {
 }
 
 func TestPartyWithNoWorktrees(t *testing.T) {
-	if out := Party(nil, config.Default()); !strings.Contains(out, "no worktrees") {
+	if out := Party(nil, config.Default(), false); !strings.Contains(out, "no worktrees") {
 		t.Errorf("empty party rendered %q", out)
 	}
 }
@@ -138,4 +139,59 @@ func stripANSI(text string) string {
 		}
 	}
 	return out.String()
+}
+
+// A machine running two dozen worktrees would otherwise print a wall of
+// identical full-health rows and scroll the one that needs attention off the top.
+func TestPartyCapsTheListAndSaysWhatItHid(t *testing.T) {
+	var views []View
+	views = append(views, view("spike/graphql", 1, false))
+	for index := 0; index < 20; index++ {
+		views = append(views, view(fmt.Sprintf("agent-task-%d", index), 5, false))
+	}
+
+	settings := config.Default()
+	rendered := stripANSI(Party(views, settings, false))
+
+	rows := creatureRows(rendered)
+	if rows != settings.Display.PartyLimit {
+		t.Errorf("rendered %d creature rows, want the limit of %d", rows, settings.Display.PartyLimit)
+	}
+	if !strings.Contains(rendered, "and 9 more, all at full health") {
+		t.Errorf("did not report what it hid:\n%s", rendered)
+	}
+	// The alive count must stay honest even though the list is truncated.
+	if !strings.Contains(rendered, "21 alive") {
+		t.Error("alive count does not reflect every worktree")
+	}
+	// The one that matters must survive the cut.
+	if !strings.Contains(rendered, "spike/graphql") {
+		t.Error("the worst worktree was truncated away")
+	}
+}
+
+func TestPartyAllShowsEverything(t *testing.T) {
+	var views []View
+	for index := 0; index < 20; index++ {
+		views = append(views, view(fmt.Sprintf("agent-task-%d", index), 5, false))
+	}
+	rendered := stripANSI(Party(views, config.Default(), true))
+	if got := creatureRows(rendered); got != 20 {
+		t.Errorf("--all showed %d worktrees, want 20", got)
+	}
+	if strings.Contains(rendered, "more") {
+		t.Error("--all still reported hidden rows")
+	}
+}
+
+// creatureRows counts rendered worktrees. Rarity stars cannot be counted
+// directly, because one row carries between one and five of them.
+func creatureRows(rendered string) int {
+	rows := 0
+	for _, line := range strings.Split(rendered, "\n") {
+		if strings.ContainsAny(line, "♥♡") {
+			rows++
+		}
+	}
+	return rows
 }

@@ -27,6 +27,9 @@ type Score struct {
 type Display struct {
 	BehindShownPast int `toml:"behind_shown_past"`
 	BranchLabelMax  int `toml:"branch_label_max"`
+	// PartyLimit caps the party view. Sorted worst-first, so the rows that get
+	// hidden are the healthy ones nobody needs to read.
+	PartyLimit int `toml:"party_limit"`
 }
 
 // Migrations was the alembic check. It is off by default because it costs a
@@ -69,7 +72,7 @@ func Default() Config {
 			UnpushedManyAt: 5,
 			TestsFailing:   2,
 		},
-		Display: Display{BehindShownPast: 40, BranchLabelMax: 26},
+		Display: Display{BehindShownPast: 40, BranchLabelMax: 26, PartyLimit: 12},
 		Signals: Signals{
 			Enabled: []string{"dirty", "unpushed", "behind", "tests"},
 			Migrations: Migrations{
