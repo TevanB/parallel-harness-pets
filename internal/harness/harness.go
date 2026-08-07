@@ -195,9 +195,12 @@ func InstallCodex(binary string, remove bool) error {
 
 // TmuxSnippet is printed rather than written, because silently editing somebody's
 // tmux config is a worse surprise than one line to paste.
+//
+// It passes the pane's path explicitly: tmux runs #(...) from its server's
+// working directory, not the pane's, so without this every pane shows the same pet.
 func TmuxSnippet(binary string) string {
 	return fmt.Sprintf(`# ~/.tmux.conf
-set -g status-right '#(%s render --format=tmux)'
+set -g status-right '#(%s render --format=tmux --cwd=#{pane_current_path})'
 set -g status-interval 5
 `, binary)
 }

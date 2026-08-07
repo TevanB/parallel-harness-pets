@@ -133,6 +133,16 @@ func (d Den) Completion() []Progress {
 	return progress
 }
 
+// Distinct counts species, not entries, so a shiny does not inflate the total
+// shown against a roster size that counts each creature once.
+func (d Den) Distinct() int {
+	seen := map[string]bool{}
+	for _, entry := range d.Entries {
+		seen[entry.Species] = true
+	}
+	return len(seen)
+}
+
 func (d Den) ShinyCount() int {
 	count := 0
 	for _, entry := range d.Entries {

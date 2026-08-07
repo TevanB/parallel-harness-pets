@@ -32,6 +32,9 @@ func partyCommand() {
 		if !found {
 			continue
 		}
+		if current.Stale(now) {
+			refreshInBackground(repo.Root)
+		}
 		tests := state.ReadTests(cacheDir, repo.Key(), now)
 		views = append(views, render.View{
 			Pet:      identity.For(repo.Branch),
@@ -70,22 +73,29 @@ func hatchCommand() {
 	}
 	os.WriteFile(marker, []byte(time.Now().Format(time.RFC3339)+"\n"), 0o644)
 
+	// Recording happens before rendering so the position shown is the real one.
+	// The hatch itself is free, but the den entry has to be earned, or a
+	// checkout -b loop farms the collection.
+	recordIfEarned(repo, settings, cacheDir)
+
 	pet := identity.For(repo.Branch)
 	collection := den.Load(cacheDir)
-	position := len(collection.Entries) + 1
-	if collection.Has(pet) {
-		position = len(collection.Entries)
-	}
-	fmt.Print(render.Hatch(pet, position, len(identity.All())))
-
-	// Recording is separate from showing: the hatch is free, but the den entry
-	// has to be earned, or a checkout -b loop farms the collection.
-	recordIfEarned(repo, settings, cacheDir)
+	fmt.Print(render.Hatch(pet, collection.Distinct(), len(identity.All()), collection.Has(pet)))
 }
 
-func recordIfEarned(repo gitrepo.Repo, settings config.Config, cacheDir string) {
-	if !signal.Earned(repo, settings) {
-		return
+// recordIfEarned adds a creature to the den once its worktree has a commit.
+//
+// The already-collected check comes first because this runs on every probe, and
+// Earned costs several git subprocesses that are pure waste for a creature the
+// den has held since last week.
+func recordIfEarned(repo gitrepo.Repo, settings config.Config, cacheDir string) bool {
+	pet := identity.For(repo.Branch)
+	if den.Load(cacheDir).Has(pet) {
+		return false
 	}
-	den.Record(cacheDir, identity.For(repo.Branch), repo.Branch, time.Now())
+	if !signal.Earned(repo, settings) {
+		return false
+	}
+	added, _ := den.Record(cacheDir, pet, repo.Branch, time.Now())
+	return added
 }

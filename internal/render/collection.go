@@ -2,6 +2,7 @@ package render
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 	"time"
 
@@ -33,9 +34,18 @@ func Party(views []View, settings config.Config) string {
 	if len(views) == 0 {
 		return fmt.Sprintf("%s(-.-) no worktrees seen yet. open one.%s\n", dim, reset)
 	}
+	// Worst first: this is a health dashboard before it is a trophy case, and
+	// sorting by branch below keeps the order stable between refreshes.
+	sort.Slice(views, func(first, second int) bool {
+		if views[first].Score.Hearts != views[second].Score.Hearts {
+			return views[first].Score.Hearts < views[second].Score.Hearts
+		}
+		return views[first].Branch < views[second].Branch
+	})
+
 	var out strings.Builder
-	fmt.Fprintf(&out, "\n  %spets party%s%s%d alive%s\n\n",
-		label, reset, strings.Repeat(" ", 34), len(views), reset)
+	fmt.Fprintf(&out, "\n  %spets party%s%s%s%d alive%s\n\n",
+		label, reset, strings.Repeat(" ", 34), dim, len(views), reset)
 
 	widestSpecies, widestBranch := 0, 0
 	for _, view := range views {
@@ -68,10 +78,6 @@ func Party(views []View, settings config.Config) string {
 			fmt.Fprintf(&out, "  %s%s%s", warn, strings.Join(flags, " "), reset)
 		}
 		fmt.Fprintln(&out)
-
-		if view.Score.Hearts < worst.Score.Hearts {
-			worst = view
-		}
 	}
 
 	if len(worst.Score.Penalties) > 0 {
@@ -133,7 +139,10 @@ func Den(collection den.Den) string {
 }
 
 // Hatch is the one animated moment in the project: a branch never opened before.
-func Hatch(pet identity.Pet, position, total int) string {
+//
+// collected is false when the worktree has no commit yet, in which case the
+// creature is shown but has not entered the den.
+func Hatch(pet identity.Pet, have, total int, collected bool) string {
 	var out strings.Builder
 	tint := rarityHue(pet.Rarity)
 	fmt.Fprintf(&out, "\n       %s.-\"\"\"-.%s\n", dim, reset)
@@ -145,7 +154,11 @@ func Hatch(pet identity.Pet, position, total int) string {
 	fmt.Fprintf(&out, "       %s%s%s  %s%s %s%s\n",
 		hue(pet.Color), pet.Label(), reset,
 		tint, pet.Rarity.Stars(), strings.ToUpper(pet.Rarity.String()), reset)
-	fmt.Fprintf(&out, "       %sfirst hatch · %d of %d in your den%s\n\n", dim, position, total, reset)
+	if collected {
+		fmt.Fprintf(&out, "       %sfirst hatch · %d of %d in your den%s\n\n", dim, have, total, reset)
+	} else {
+		fmt.Fprintf(&out, "       %sfirst hatch · commit here to keep it%s\n\n", dim, reset)
+	}
 	return out.String()
 }
 

@@ -84,18 +84,45 @@ type hookPayload struct {
 	ToolResponse json.RawMessage `json:"tool_response"`
 }
 
-// readPayload parses harness JSON from stdin, tolerating an empty or absent one.
+// stdinDeadline bounds how long a surface may take to hand over its payload.
+//
+// A harness that pipes JSON writes it immediately and closes, so this is never
+// reached. A surface that does not, such as tmux running us through #(...), can
+// hand us an inherited stdin that never closes, and an unbounded read there
+// hangs the status bar forever.
+const stdinDeadline = 150 * time.Millisecond
+
+// readPayload parses harness JSON from stdin, tolerating an absent, empty, or
+// never-closing one.
 func readPayload() hookPayload {
 	var payload hookPayload
 	info, err := os.Stdin.Stat()
 	if err != nil || info.Mode()&os.ModeCharDevice != 0 {
 		return payload
 	}
-	data, err := io.ReadAll(os.Stdin)
-	if err != nil || len(data) == 0 {
-		return payload
+	return parsePayload(os.Stdin, stdinDeadline)
+}
+
+// parsePayload is readPayload's testable core: it gives up rather than blocking
+// forever on a reader that never reaches EOF.
+func parsePayload(source io.Reader, deadline time.Duration) hookPayload {
+	var payload hookPayload
+	received := make(chan []byte, 1)
+	go func() {
+		data, err := io.ReadAll(source)
+		if err != nil {
+			received <- nil
+			return
+		}
+		received <- data
+	}()
+	select {
+	case data := <-received:
+		if len(data) > 0 {
+			json.Unmarshal(data, &payload)
+		}
+	case <-time.After(deadline):
 	}
-	json.Unmarshal(data, &payload)
 	return payload
 }
 
@@ -177,7 +204,13 @@ func stringsCutPrefix(text, prefix string) (string, bool) {
 func renderCommand(args []string) {
 	settings := config.Load()
 	payload := readPayload()
-	view, found := build(payload.directory(), payload.Model.DisplayName, settings)
+	// A surface with no payload can name the worktree itself. tmux passes
+	// #{pane_current_path} this way.
+	directory := flagValue(args, "cwd", "")
+	if directory == "" {
+		directory = payload.directory()
+	}
+	view, found := build(directory, payload.Model.DisplayName, settings)
 	format := flagValue(args, "format", "statusline")
 	if !found {
 		if format == "json" {
