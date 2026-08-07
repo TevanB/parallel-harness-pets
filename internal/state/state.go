@@ -98,26 +98,47 @@ func Write(dir, key string, value State) error {
 	return replace(filepath.Join(dir, key+".state"), builder.String())
 }
 
-// All returns every worktree the cache knows about, newest first, skipping any
-// whose directory has since been deleted.
+// All returns every live worktree the cache knows about, newest first.
+//
+// It deduplicates by root and prunes entries whose directory is gone. Without
+// that, one worktree can appear several times: a deleted worktree lingers
+// forever, and any change to how keys are built leaves the same root recorded
+// under two filenames, listing it twice with contradictory state.
 func All(dir string) []State {
 	entries, err := os.ReadDir(dir)
 	if err != nil {
 		return nil
 	}
-	var found []State
+	newest := map[string]State{}
+	files := map[string]string{}
 	for _, entry := range entries {
-		name := strings.TrimSuffix(entry.Name(), ".state")
-		if name == entry.Name() {
+		name, isState := strings.CutSuffix(entry.Name(), ".state")
+		if !isState {
 			continue
 		}
 		loaded, ok := Read(dir, name)
-		if !ok || loaded.Root == "" {
+		if !ok {
 			continue
 		}
-		if info, err := os.Stat(loaded.Root); err != nil || !info.IsDir() {
+		if info, statErr := os.Stat(loaded.Root); loaded.Root == "" || statErr != nil || !info.IsDir() {
+			// The cache is disposable, so an entry pointing nowhere is simply removed.
+			os.Remove(filepath.Join(dir, entry.Name()))
 			continue
 		}
+		// Two files for one root means a superseded key scheme. Keep the newest
+		// and delete the loser, so the duplicate heals instead of lingering.
+		if existing, seen := newest[loaded.Root]; seen {
+			if !loaded.Stamp.After(existing.Stamp) {
+				os.Remove(filepath.Join(dir, entry.Name()))
+				continue
+			}
+			os.Remove(filepath.Join(dir, files[loaded.Root]))
+		}
+		newest[loaded.Root] = loaded
+		files[loaded.Root] = entry.Name()
+	}
+	found := make([]State, 0, len(newest))
+	for _, loaded := range newest {
 		found = append(found, loaded)
 	}
 	sort.Slice(found, func(first, second int) bool {

@@ -83,3 +83,66 @@ func TestStaleness(t *testing.T) {
 		t.Error("a minute-old state should be stale")
 	}
 }
+
+// One worktree recorded under two keys must appear once. Changing how keys are
+// built leaves exactly this situation behind for every existing user.
+func TestAllDeduplicatesByRoot(t *testing.T) {
+	dir := t.TempDir()
+	root := t.TempDir()
+	older := time.Now().Add(-time.Hour)
+	newer := time.Now()
+
+	Write(dir, "old_style_key", State{Root: root, Branch: "main", Dirty: 5, Stamp: older})
+	Write(dir, "new-style-key-a1b2c3d4", State{Root: root, Branch: "main", Dirty: 0, Stamp: newer})
+
+	all := All(dir)
+	if len(all) != 1 {
+		t.Fatalf("All returned %d entries for one worktree, want 1", len(all))
+	}
+	if all[0].Dirty != 0 {
+		t.Errorf("kept the stale entry (dirty=%d), want the newest", all[0].Dirty)
+	}
+}
+
+// A deleted worktree would otherwise haunt the party view forever.
+func TestAllPrunesEntriesWhoseWorktreeIsGone(t *testing.T) {
+	dir := t.TempDir()
+	gone := filepath.Join(t.TempDir(), "deleted-worktree")
+	Write(dir, "ghost", State{Root: gone, Branch: "main", Stamp: time.Now()})
+
+	if got := len(All(dir)); got != 0 {
+		t.Errorf("All returned %d entries for a deleted worktree, want 0", got)
+	}
+	if _, err := os.Stat(filepath.Join(dir, "ghost.state")); !os.IsNotExist(err) {
+		t.Error("the orphaned cache file was not pruned")
+	}
+}
+
+func TestAllIgnoresNonStateFiles(t *testing.T) {
+	dir := t.TempDir()
+	root := t.TempDir()
+	Write(dir, "real", State{Root: root, Branch: "main", Stamp: time.Now()})
+	WriteTests(dir, "real", "pass", time.Now())
+	os.WriteFile(filepath.Join(dir, "real.hatched"), []byte("x"), 0o644)
+	os.WriteFile(filepath.Join(dir, "den.json"), []byte("{}"), 0o644)
+
+	if got := len(All(dir)); got != 1 {
+		t.Errorf("All returned %d entries, want 1", got)
+	}
+}
+
+// The superseded file should heal itself away, not linger as dead weight.
+func TestAllRemovesTheSupersededDuplicate(t *testing.T) {
+	dir := t.TempDir()
+	root := t.TempDir()
+	Write(dir, "old_key", State{Root: root, Stamp: time.Now().Add(-time.Hour)})
+	Write(dir, "new_key", State{Root: root, Stamp: time.Now()})
+
+	All(dir)
+	if _, err := os.Stat(filepath.Join(dir, "old_key.state")); !os.IsNotExist(err) {
+		t.Error("the superseded duplicate was not removed")
+	}
+	if _, err := os.Stat(filepath.Join(dir, "new_key.state")); err != nil {
+		t.Error("the surviving entry was removed by mistake")
+	}
+}
