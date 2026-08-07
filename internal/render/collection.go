@@ -49,10 +49,10 @@ func Party(views []View, settings config.Config) string {
 
 	widestSpecies, widestBranch := 0, 0
 	for _, view := range views {
-		if width := len([]rune(view.Pet.Label())); width > widestSpecies {
+		if width := displayWidth(view.Pet.Label()); width > widestSpecies {
 			widestSpecies = width
 		}
-		if width := len([]rune(view.Branch)); width > widestBranch {
+		if width := displayWidth(view.Branch); width > widestBranch {
 			widestBranch = width
 		}
 	}
@@ -62,14 +62,12 @@ func Party(views []View, settings config.Config) string {
 
 	worst := views[0]
 	for _, view := range views {
-		body := hue(view.Pet.Color) + view.Body() + reset
-		padding := strings.Repeat(" ", max(0, 9-len([]rune(view.Body()))))
-		species := view.Pet.Label() + strings.Repeat(" ", max(0, widestSpecies-len([]rune(view.Pet.Label()))))
-		branch := truncate(view.Branch, settings.Display.BranchLabelMax)
-		branch += strings.Repeat(" ", max(0, widestBranch-len([]rune(branch))))
+		body := hue(view.Pet.Color) + pad(view.Body(), 9) + reset
+		species := pad(view.Pet.Label(), widestSpecies)
+		branch := pad(truncate(view.Branch, settings.Display.BranchLabelMax), widestBranch)
 
-		fmt.Fprintf(&out, "  %s%s %s%s%s %s%-5s%s %s%s%s  %s",
-			body, padding,
+		fmt.Fprintf(&out, "  %s %s%s%s %s%-5s%s %s%s%s  %s",
+			body,
 			hue(view.Pet.Color), species, reset,
 			rarityHue(view.Pet.Rarity), view.Pet.Rarity.Stars(), reset,
 			label, branch, reset,
