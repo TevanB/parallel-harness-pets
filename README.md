@@ -167,6 +167,18 @@ Two ways in, and only one needs Go. **Creatures** are data files, so adding one
 means writing six lines and no code. **Signals** are any executable that prints
 `key=value`. Issues and pull requests welcome.
 
+To try it without touching anything you own:
+
+```sh
+./scripts/sandbox.sh          # throwaway HOME, seeded worktrees, opens a shell
+./scripts/sandbox.sh --demo   # print the views and exit
+```
+
+It builds from source, sets `HOME` and the XDG directories to a temporary
+folder, and seeds a handful of worktrees at different levels of health so
+`pets party` has something to show. Your own config, collection and agent
+settings are neither read nor written.
+
 ## Licence
 
 MIT. See [LICENSE](LICENSE).
