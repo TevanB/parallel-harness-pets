@@ -9,11 +9,11 @@ publishes the archives and checksums.
 
 ## The Homebrew cask updates itself
 
-[The tap](https://github.com/TevanB/homebrew-tap) carries a workflow that polls
+[The tap](https://github.com/TevvvB/homebrew-tap) carries a workflow that polls
 this repository's latest release every six hours, and can be run on demand:
 
 ```sh
-gh workflow run update-casks.yml --repo TevanB/homebrew-tap
+gh workflow run update-casks.yml --repo TevvvB/homebrew-tap
 ```
 
 It regenerates the cask from the release's `checksums.txt` and pushes.

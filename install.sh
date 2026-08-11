@@ -1,14 +1,14 @@
 #!/bin/sh
 # Install parallel-harness-pets.
 #
-#   curl -fsSL https://raw.githubusercontent.com/TevanB/parallel-harness-pets/main/install.sh | sh
+#   curl -fsSL https://raw.githubusercontent.com/TevvvB/parallel-harness-pets/main/install.sh | sh
 #
 # Honours PETS_VERSION to pin a release and PETS_INSTALL_DIR to choose where the
 # binary lands. Downloads are checksummed against the release before install.
 
 set -eu
 
-REPO="TevanB/parallel-harness-pets"
+REPO="TevvvB/parallel-harness-pets"
 INSTALL_DIR="${PETS_INSTALL_DIR:-$HOME/.local/bin}"
 
 say() { printf '%s\n' "$*"; }

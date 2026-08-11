@@ -2,8 +2,8 @@
 package score
 
 import (
-	"github.com/TevanB/parallel-harness-pets/internal/config"
-	"github.com/TevanB/parallel-harness-pets/internal/state"
+	"github.com/TevvvB/parallel-harness-pets/internal/config"
+	"github.com/TevvvB/parallel-harness-pets/internal/state"
 )
 
 const Max = 5

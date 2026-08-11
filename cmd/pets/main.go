@@ -11,14 +11,14 @@ import (
 	"strings"
 	"time"
 
-	"github.com/TevanB/parallel-harness-pets/internal/config"
-	"github.com/TevanB/parallel-harness-pets/internal/gitrepo"
-	"github.com/TevanB/parallel-harness-pets/internal/identity"
-	"github.com/TevanB/parallel-harness-pets/internal/render"
-	"github.com/TevanB/parallel-harness-pets/internal/score"
-	"github.com/TevanB/parallel-harness-pets/internal/signal"
-	"github.com/TevanB/parallel-harness-pets/internal/state"
-	"github.com/TevanB/parallel-harness-pets/internal/verdict"
+	"github.com/TevvvB/parallel-harness-pets/internal/config"
+	"github.com/TevvvB/parallel-harness-pets/internal/gitrepo"
+	"github.com/TevvvB/parallel-harness-pets/internal/identity"
+	"github.com/TevvvB/parallel-harness-pets/internal/render"
+	"github.com/TevvvB/parallel-harness-pets/internal/score"
+	"github.com/TevvvB/parallel-harness-pets/internal/signal"
+	"github.com/TevvvB/parallel-harness-pets/internal/state"
+	"github.com/TevvvB/parallel-harness-pets/internal/verdict"
 )
 
 var version = "dev"

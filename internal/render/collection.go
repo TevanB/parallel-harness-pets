@@ -6,10 +6,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/TevanB/parallel-harness-pets/internal/config"
-	"github.com/TevanB/parallel-harness-pets/internal/den"
-	"github.com/TevanB/parallel-harness-pets/internal/identity"
-	"github.com/TevanB/parallel-harness-pets/internal/score"
+	"github.com/TevvvB/parallel-harness-pets/internal/config"
+	"github.com/TevvvB/parallel-harness-pets/internal/den"
+	"github.com/TevvvB/parallel-harness-pets/internal/identity"
+	"github.com/TevvvB/parallel-harness-pets/internal/score"
 )
 
 // rarityHue keeps a band's colour consistent across the party, den and hatch.

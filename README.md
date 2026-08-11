@@ -18,22 +18,22 @@ and which one is in trouble.
 **Linux and macOS**
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/TevanB/parallel-harness-pets/main/install.sh | sh
+curl -fsSL https://raw.githubusercontent.com/TevvvB/parallel-harness-pets/main/install.sh | sh
 pets install
 ```
 
 **macOS with Homebrew**
 
 ```sh
-brew install TevanB/tap/parallel-harness-pets
+brew install TevvvB/tap/parallel-harness-pets
 pets install
 ```
 
 **Windows** - grab an archive from
-[Releases](https://github.com/TevanB/parallel-harness-pets/releases), put `pets`
+[Releases](https://github.com/TevvvB/parallel-harness-pets/releases), put `pets`
 on your `PATH`, then run `pets install`.
 
-**With Go** - `go install github.com/TevanB/parallel-harness-pets/cmd/pets@latest`
+**With Go** - `go install github.com/TevvvB/parallel-harness-pets/cmd/pets@latest`
 
 `pets install` finds the agents you have and wires itself in, backing up any
 config it touches and leaving your other settings alone. Start a new session
@@ -182,9 +182,3 @@ settings are neither read nor written.
 ## Licence
 
 MIT. See [LICENSE](LICENSE).
-
-## Coffee
-
-If the pet earned its keep, the developer takes payment in coffee.
-
-[![Buy me a coffee](https://img.shields.io/badge/buy_me_a_coffee-ffdd00?style=flat&logo=buymeacoffee&logoColor=black)](https://buymeacoffee.com/tevanb)

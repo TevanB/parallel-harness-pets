@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/TevanB/parallel-harness-pets/internal/verdict"
+	"github.com/TevvvB/parallel-harness-pets/internal/verdict"
 )
 
 // blockingReader never reaches EOF, which is what tmux can hand a command it

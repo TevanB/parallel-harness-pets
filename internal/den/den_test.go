@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/TevanB/parallel-harness-pets/internal/identity"
+	"github.com/TevvvB/parallel-harness-pets/internal/identity"
 )
 
 func TestRecordIsAdditiveAndIdempotent(t *testing.T) {

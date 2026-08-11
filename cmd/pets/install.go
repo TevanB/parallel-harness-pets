@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/TevanB/parallel-harness-pets/internal/harness"
+	"github.com/TevvvB/parallel-harness-pets/internal/harness"
 )
 
 func installCommand(action string, args []string) {

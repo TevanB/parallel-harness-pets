@@ -1,4 +1,4 @@
-module github.com/TevanB/parallel-harness-pets
+module github.com/TevvvB/parallel-harness-pets
 
 go 1.24
 

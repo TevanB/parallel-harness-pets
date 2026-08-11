@@ -16,9 +16,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/TevanB/parallel-harness-pets/internal/config"
-	"github.com/TevanB/parallel-harness-pets/internal/gitrepo"
-	"github.com/TevanB/parallel-harness-pets/internal/state"
+	"github.com/TevvvB/parallel-harness-pets/internal/config"
+	"github.com/TevvvB/parallel-harness-pets/internal/gitrepo"
+	"github.com/TevvvB/parallel-harness-pets/internal/state"
 )
 
 // Collect runs every enabled signal and returns the cache the renderer will read.

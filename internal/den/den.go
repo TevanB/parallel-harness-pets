@@ -15,7 +15,7 @@ import (
 	"sort"
 	"time"
 
-	"github.com/TevanB/parallel-harness-pets/internal/identity"
+	"github.com/TevvvB/parallel-harness-pets/internal/identity"
 )
 
 const Version = 1
