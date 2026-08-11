@@ -2,6 +2,7 @@ package gitrepo
 
 import (
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -127,5 +128,51 @@ func TestKeyIsStable(t *testing.T) {
 func TestDefaultBranchHonoursOverride(t *testing.T) {
 	if got := DefaultBranch(t.TempDir(), "origin/trunk"); got != "origin/trunk" {
 		t.Errorf("DefaultBranch with override = %q, want origin/trunk", got)
+	}
+}
+
+// A repo with no remote still has a trunk. Probing only remote refs left every
+// comparison failing silently: behind and unpushed read zero, and no branch
+// could ever earn its place in the den.
+func TestDefaultBranchFindsALocalTrunk(t *testing.T) {
+	root := t.TempDir()
+	for _, args := range [][]string{
+		{"init", "-q", "."},
+		{"config", "user.email", "a@b.c"},
+		{"config", "user.name", "A"},
+	} {
+		if err := exec.Command("git", append([]string{"-C", root}, args...)...).Run(); err != nil {
+			t.Skipf("git unavailable: %v", err)
+		}
+	}
+	os.WriteFile(filepath.Join(root, "a.txt"), []byte("hi"), 0o644)
+	exec.Command("git", "-C", root, "add", "-A").Run()
+	exec.Command("git", "-C", root, "commit", "-qm", "init").Run()
+	exec.Command("git", "-C", root, "branch", "-M", "main").Run()
+
+	if got := DefaultBranch(root, ""); got != "main" {
+		t.Errorf("DefaultBranch on a remoteless repo = %q, want the local main", got)
+	}
+}
+
+func TestIsTrunkAcceptsLocalAndRemoteNames(t *testing.T) {
+	cases := []struct {
+		trunk, branch string
+		want          bool
+	}{
+		{"origin/main", "main", true},
+		{"main", "main", true},
+		{"origin/master", "master", true},
+		{"master", "master", true},
+		{"origin/main", "feat/thing", false},
+		{"main", "feat/thing", false},
+		// A branch merely ending in the trunk's name is not the trunk.
+		{"origin/main", "not-main", false},
+	}
+	for _, testCase := range cases {
+		if got := IsTrunk(testCase.trunk, testCase.branch); got != testCase.want {
+			t.Errorf("IsTrunk(%q, %q) = %v, want %v",
+				testCase.trunk, testCase.branch, got, testCase.want)
+		}
 	}
 }

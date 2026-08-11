@@ -20,10 +20,6 @@ func installCommand(action string, args []string) {
 	switch requested {
 	case "", "all":
 		targets = harness.Detect()
-		if len(targets) == 0 && !remove {
-			fmt.Println("No Claude Code or Codex install found. The tmux and shell")
-			fmt.Println("surfaces below work with any agent and need neither.")
-		}
 	default:
 		targets = []harness.Name{harness.Name(requested)}
 	}
@@ -51,8 +47,14 @@ func installCommand(action string, args []string) {
 		fmt.Println("\nIf you added the tmux or shell snippets by hand, remove those too.")
 		return
 	}
-	fmt.Println("\nStart a new session to see it. Claude Code reads hooks at startup.")
-	fmt.Println("\nFor tmux, or any agent without hook support:")
+	if len(targets) == 0 {
+		fmt.Println("No Claude Code or Codex config directory found, so nothing was wired up.")
+		fmt.Println("If one of them is installed but has not been run yet, name it directly:")
+		fmt.Println("\n  pets install --harness=claude")
+	} else {
+		fmt.Println("\nStart a new session to see it. Agents read hooks at startup.")
+	}
+	fmt.Println("\nThe snippets below need no harness support and work with any agent:")
 	fmt.Print("\n" + harness.TmuxSnippet(binary))
 	fmt.Print("\n" + harness.ShellSnippet(binary))
 }

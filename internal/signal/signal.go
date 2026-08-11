@@ -57,10 +57,15 @@ func Collect(repo gitrepo.Repo, settings config.Config, now time.Time) state.Sta
 // per roll and keeps the den a record of branches where work actually happened.
 func Earned(repo gitrepo.Repo, settings config.Config) bool {
 	trunk := gitrepo.DefaultBranch(repo.Root, settings.Branch.Default)
-	if strings.HasSuffix(trunk, "/"+repo.Branch) {
+	if gitrepo.IsTrunk(trunk, repo.Branch) {
 		return true
 	}
-	return countNumber(git(repo.Root, "rev-list", "--count", trunk+"..HEAD")) > 0
+	if ahead := git(repo.Root, "rev-list", "--count", trunk+"..HEAD"); ahead != "" {
+		return countNumber(ahead) > 0
+	}
+	// No trunk to compare against at all. Any commit is the best signal left,
+	// which still beats never letting this repo collect anything.
+	return countNumber(git(repo.Root, "rev-list", "--count", "HEAD")) > 0
 }
 
 func git(root string, args ...string) string {

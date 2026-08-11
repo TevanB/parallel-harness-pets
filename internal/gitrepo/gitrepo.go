@@ -106,10 +106,24 @@ func DefaultBranch(root, override string) string {
 			return name
 		}
 	}
-	for _, candidate := range []string{"origin/main", "origin/master", "origin/trunk", "origin/develop"} {
+	// Remote refs first, then local ones. A repo with no remote still has a
+	// trunk, and without this fallback every comparison against it fails
+	// silently: behind and unpushed read zero, and no branch can ever earn its
+	// place in the den.
+	candidates := []string{
+		"origin/main", "origin/master", "origin/trunk", "origin/develop",
+		"main", "master", "trunk", "develop",
+	}
+	for _, candidate := range candidates {
 		if exec.Command("git", "-C", root, "rev-parse", "--verify", "--quiet", candidate).Run() == nil {
 			return candidate
 		}
 	}
 	return "origin/main"
+}
+
+// IsTrunk reports whether a branch is the repo's trunk, accepting both a local
+// name and a remote-qualified one.
+func IsTrunk(trunk, branch string) bool {
+	return trunk == branch || strings.HasSuffix(trunk, "/"+branch)
 }
