@@ -29,11 +29,11 @@ brew install TevanB/tap/parallel-harness-pets
 pets install
 ```
 
-**Windows** — grab an archive from
+**Windows** - grab an archive from
 [Releases](https://github.com/TevanB/parallel-harness-pets/releases), put `pets`
 on your `PATH`, then run `pets install`.
 
-**With Go** — `go install github.com/TevanB/parallel-harness-pets/cmd/pets@latest`
+**With Go** - `go install github.com/TevanB/parallel-harness-pets/cmd/pets@latest`
 
 `pets install` finds the agents you have and wires itself in, backing up any
 config it touches and leaving your other settings alone. Start a new session
