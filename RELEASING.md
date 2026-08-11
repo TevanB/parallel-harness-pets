@@ -4,31 +4,40 @@
 git tag -a vX.Y.Z -m "…" && git push origin vX.Y.Z
 ```
 
-The release workflow builds every platform and publishes the archives.
+That is the whole thing. The release workflow builds every platform and
+publishes the archives and checksums.
 
-Homebrew casks are macOS only, so the cask serves Mac users and everyone else
-takes an archive or `go install`. The Linux blocks GoReleaser writes into the
-cask are unreachable, and harmless.
+## The Homebrew cask updates itself
 
-## Publishing the Homebrew cask
+[The tap](https://github.com/TevanB/homebrew-tap) carries a workflow that polls
+this repository's latest release every six hours, and can be run on demand:
 
-The cask is currently pushed by hand, because CI has no token with write access
-to `TevanB/homebrew-tap`. `.goreleaser.yaml` therefore sets `skip_upload` on the
-cask and the scoop manifest, so a missing token can never fail the whole release
-and leave users with nothing.
+```sh
+gh workflow run update-casks.yml --repo TevanB/homebrew-tap
+```
 
-After the release finishes, update
-[the tap](https://github.com/TevanB/homebrew-tap)'s
-`Casks/parallel-harness-pets.rb`: bump `version`, and replace each `sha256` with
-the matching line from the release's `checksums.txt`.
+It regenerates the cask from the release's `checksums.txt` and pushes.
 
-**Take the checksums from the published `checksums.txt`, never from a local
-rebuild.** The build is not byte-reproducible, so a locally generated cask
-carries hashes that no downloaded artifact matches and every `brew install`
-fails verification.
+**No token is involved.** A workflow in this repository could not write to the
+tap without a personal access token, but a workflow in the tap can write to the
+tap with its own `GITHUB_TOKEN`. Pulling from the release rather than pushing to
+the tap removes the secret entirely, which is why `.goreleaser.yaml` keeps
+`skip_upload` set on the cask and the scoop manifest.
 
-To automate it later, create a fine-grained personal access token with contents
-write access to `homebrew-tap` only, add it as the `TAP_GITHUB_TOKEN` secret,
-and drop the two `skip_upload` lines. Prefer a fine-grained token over a
-general-purpose one: this repository is public, and a broad token in its secrets
-would be reachable from any workflow in it.
+It also makes the checksum rule structural rather than a thing to remember: the
+updater has no local build to take hashes from, only the published
+`checksums.txt`. That matters because the build is not byte-reproducible, so
+locally generated hashes match nothing anyone downloads and every `brew install`
+would fail verification.
+
+## Platforms
+
+Homebrew casks are macOS only. Linux and Windows users take a release archive or
+`go install`. The Linux blocks GoReleaser writes into the cask are unreachable,
+and harmless.
+
+## Checks
+
+The tap runs `brew audit --cask --strict` on a macOS runner on every push, then
+installs the cask and runs the binary, so an audit cannot pass while the thing
+it describes is unusable.
