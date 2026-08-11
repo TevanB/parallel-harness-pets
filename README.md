@@ -67,14 +67,32 @@ cosmetic status line gets deleted the first time it is mildly annoying.
 
 ## Install
 
+Download the archive for your platform from
+[Releases](https://github.com/TevanB/parallel-harness-pets/releases), put `pets`
+somewhere on your `PATH`, then:
+
 ```sh
-brew install TevanB/tap/parallel-harness-pets   # or: scoop, or a release binary
+pets install
+```
+
+Or from source, if you have Go:
+
+```sh
+go install github.com/TevanB/parallel-harness-pets/cmd/pets@latest
 pets install
 ```
 
 One static binary. No bash, no jq, no Python, no Node, nothing to boot. `pets
 install` detects which agents you actually have and wires itself into them, then
-prints the snippets for tmux and your shell.
+prints the snippets for tmux and your shell. It backs up any config it touches
+and leaves your other settings and hooks alone. `pets uninstall` reverses it.
+
+If an agent is installed but has never been run, its config directory does not
+exist yet and there is nothing to detect. Name it directly in that case:
+
+```sh
+pets install --harness=claude
+```
 
 Start a new session afterwards, since agents read status line and hook config at
 startup.

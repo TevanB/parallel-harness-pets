@@ -34,8 +34,13 @@ changelog:
       - "^test:"
       - "^chore:"
 
+# Publishing to a tap needs the TevanB/homebrew-tap repository to exist and a
+# TAP_GITHUB_TOKEN secret to push with. Until both are in place these are
+# skipped, so a tag still produces working GitHub Release binaries rather than
+# failing the whole release on a missing repo.
 homebrew_casks:
   - name: parallel-harness-pets
+    skip_upload: "true"
     repository:
       owner: TevanB
       name: homebrew-tap
@@ -54,7 +59,8 @@ homebrew_casks:
                          must_succeed: false
 
 scoops:
-  - repository:
+  - skip_upload: "true"
+    repository:
       owner: TevanB
       name: scoop-bucket
     homepage: https://github.com/TevanB/parallel-harness-pets
