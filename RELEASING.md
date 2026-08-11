@@ -6,6 +6,10 @@ git tag -a vX.Y.Z -m "…" && git push origin vX.Y.Z
 
 The release workflow builds every platform and publishes the archives.
 
+Homebrew casks are macOS only, so the cask serves Mac users and everyone else
+takes an archive or `go install`. The Linux blocks GoReleaser writes into the
+cask are unreachable, and harmless.
+
 ## Publishing the Homebrew cask
 
 The cask is currently pushed by hand, because CI has no token with write access
