@@ -127,3 +127,28 @@ func TestGreenGoRunIsRecognisedThroughAHarnessPayload(t *testing.T) {
 		t.Errorf("green go run through a harness payload = %q/%v, want pass/true", result, ok)
 	}
 }
+
+// Asking for help is a success. Bare pets already exited 0, so an exit 1 on
+// --help was invisible interactively and broke every script and smoke test
+// that ran it. A packaging check caught it, not a human.
+func TestHelpExitsZero(t *testing.T) {
+	for _, args := range [][]string{{"help"}, {"--help"}, {"-h"}, {}} {
+		if code := dispatch(args); code != 0 {
+			t.Errorf("dispatch(%v) = %d, want 0", args, code)
+		}
+	}
+}
+
+func TestUnknownCommandExitsNonZero(t *testing.T) {
+	if code := dispatch([]string{"nonsense"}); code == 0 {
+		t.Error("an unknown command exited 0, so a typo would look like success")
+	}
+}
+
+func TestVersionExitsZero(t *testing.T) {
+	for _, args := range [][]string{{"version"}, {"--version"}, {"-v"}} {
+		if code := dispatch(args); code != 0 {
+			t.Errorf("dispatch(%v) = %d, want 0", args, code)
+		}
+	}
+}

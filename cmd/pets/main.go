@@ -39,21 +39,33 @@ const usage = `pets - a creature for every worktree
 `
 
 func main() {
-	if len(os.Args) < 2 {
+	os.Exit(dispatch(os.Args[1:]))
+}
+
+// dispatch routes a command and returns the process exit code.
+//
+// Asking for help is a success and prints to stdout; an unknown command is a
+// failure and prints to stderr. Conflating the two makes pets --help exit 1,
+// which passes unnoticed interactively and fails every script that runs it.
+func dispatch(args []string) int {
+	if len(args) == 0 {
 		fmt.Print(usage)
-		return
+		return 0
 	}
-	switch os.Args[1] {
+	switch args[0] {
+	case "help", "--help", "-h":
+		fmt.Print(usage)
+		return 0
 	case "render":
-		renderCommand(os.Args[2:])
+		renderCommand(args[1:])
 	case "party":
-		partyCommand(os.Args[2:])
+		partyCommand(args[1:])
 	case "den":
 		denCommand()
 	case "card":
-		cardCommand(os.Args[2:])
+		cardCommand(args[1:])
 	case "probe":
-		probeCommand(os.Args[2:])
+		probeCommand(args[1:])
 	case "hatch":
 		hatchCommand()
 	case "record":
@@ -61,13 +73,14 @@ func main() {
 	case "quip":
 		quipCommand()
 	case "install", "uninstall":
-		installCommand(os.Args[1], os.Args[2:])
+		installCommand(args[0], args[1:])
 	case "version", "--version", "-v":
 		fmt.Println(version)
 	default:
-		fmt.Print(usage)
-		os.Exit(1)
+		fmt.Fprintf(os.Stderr, "pets: unknown command %q\n\n%s", args[0], usage)
+		return 1
 	}
+	return 0
 }
 
 // hookPayload is the shape both Claude Code and Codex pipe into a hook.
