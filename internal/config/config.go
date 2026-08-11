@@ -45,6 +45,12 @@ type External struct {
 	TimeoutMs int    `toml:"timeout_ms"`
 }
 
+// Update controls the once-a-day check for a newer release. It runs only from
+// commands a person types, never from a hook or the render path.
+type Update struct {
+	Check bool `toml:"check"`
+}
+
 type Signals struct {
 	Enabled    []string   `toml:"enabled"`
 	Migrations Migrations `toml:"migrations"`
@@ -53,6 +59,7 @@ type Signals struct {
 
 type Config struct {
 	Branch  Branch  `toml:"branch"`
+	Update  Update  `toml:"update"`
 	Score   Score   `toml:"score"`
 	Display Display `toml:"display"`
 	Signals Signals `toml:"signals"`
@@ -73,6 +80,7 @@ func Default() Config {
 			TestsFailing:   2,
 		},
 		Display: Display{BehindShownPast: 40, BranchLabelMax: 26, PartyLimit: 12},
+		Update:  Update{Check: true},
 		Signals: Signals{
 			Enabled: []string{"dirty", "unpushed", "behind", "tests"},
 			Migrations: Migrations{

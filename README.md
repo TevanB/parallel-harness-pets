@@ -42,6 +42,20 @@ afterwards. `pets uninstall` reverses it.
 If an agent is installed but has never been run, it has no config directory yet,
 so name it directly: `pets install --harness=claude`.
 
+## Updating
+
+| Installed with | Update with |
+|---|---|
+| Homebrew | `brew upgrade parallel-harness-pets` |
+| The install script | re-run it, it replaces the binary in place |
+| Go | `go install github.com/TevvvB/parallel-harness-pets/cmd/pets@latest` |
+| A release archive | download the new one |
+
+`pets card`, `pets party` and `pets den` check once a day whether a newer
+release exists and print a line if so. Nothing else ever does: no hook and
+nothing on the status line path touches the network. Turn it off with
+`check = false` under `[update]`.
+
 ## Supported agents
 
 | Agent | What you get |
@@ -130,6 +144,10 @@ Optional, in `~/.config/pets/config.toml`.
 [branch]
 # Detected from your remote; set only to override.
 # default = "origin/trunk"
+
+[update]
+# Once a day, and only from card, party and den.
+check = true
 
 [score]
 dirty_many_at = 15

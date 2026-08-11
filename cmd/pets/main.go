@@ -271,6 +271,7 @@ func cardCommand(args []string) {
 		os.Exit(1)
 	}
 	fmt.Print(render.Card(view, settings))
+	fmt.Print(updateNotice(settings))
 }
 
 func probeCommand(args []string) {

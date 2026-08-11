@@ -10,14 +10,27 @@ import (
 	"github.com/TevvvB/parallel-harness-pets/internal/den"
 	"github.com/TevvvB/parallel-harness-pets/internal/gitrepo"
 	"github.com/TevvvB/parallel-harness-pets/internal/identity"
+	"github.com/TevvvB/parallel-harness-pets/internal/release"
 	"github.com/TevvvB/parallel-harness-pets/internal/render"
 	"github.com/TevvvB/parallel-harness-pets/internal/score"
 	"github.com/TevvvB/parallel-harness-pets/internal/signal"
 	"github.com/TevvvB/parallel-harness-pets/internal/state"
 )
 
+// updateNotice checks at most once a day, and only ever from here: the three
+// commands a person types. Hooks and the render path stay offline.
+func updateNotice(settings config.Config) string {
+	executable, err := os.Executable()
+	if err != nil {
+		return ""
+	}
+	latest := release.Check(config.StateDir(), version, settings.Update.Check, time.Now())
+	return render.UpdateNotice(latest, release.Command(executable))
+}
+
 func denCommand() {
 	fmt.Print(render.Den(den.Load(config.StateDir())))
+	fmt.Print(updateNotice(config.Load()))
 }
 
 // partyCommand shows every worktree the cache knows about that still exists.
@@ -53,6 +66,7 @@ func partyCommand(args []string) {
 		}
 	}
 	fmt.Print(render.Party(views, settings, showAll))
+	fmt.Print(updateNotice(settings))
 }
 
 // hatchMarker records that a worktree has already been greeted, so the hatch

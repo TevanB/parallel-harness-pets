@@ -13,6 +13,14 @@ import (
 )
 
 // rarityHue keeps a band's colour consistent across the party, den and hatch.
+// UpdateNotice is one dim line, shown only under views a person asked for.
+func UpdateNotice(latest, command string) string {
+	if latest == "" {
+		return ""
+	}
+	return fmt.Sprintf("  %supdate available: %s · %s%s\n\n", dim, latest, command, reset)
+}
+
 func rarityHue(rarity identity.Rarity) string {
 	switch rarity {
 	case identity.Mythic:
