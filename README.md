@@ -4,8 +4,8 @@ A creature for every git worktree, living in your coding agent's status line.
 Its species comes from the branch name, and its mood tracks how tidy that branch is.
 
 ```
-((•ᴗ•))  owl  · feat/checkout-flow  ♥♥♥♥♥             ·  Opus 5
-[@_@]    frog · fix/session-leak  ♥♡♡♡♡  28△ 27↑      ·  Opus 5
+<•_•>    moth · feat/checkout-flow  ♥♥♥♥♡  2△        ·  Opus 5
+o[@_@]o  seal · fix/session-leak    ♥♡♡♡♡  28△ 27↑  ·  Opus 5
 ```
 
 Most terminal pets belong to *you*: one creature, nurtured over time. This one
@@ -61,12 +61,15 @@ nothing on the status line path touches the network. Turn it off with
 | Agent | What you get |
 |---|---|
 | Claude Code | Full: live status line, hatch, quips |
-| Codex CLI | Pet in the terminal title, plus hatch and quips |
+| Codex CLI | Hooks are written, but untested against a real Codex. Use the shell snippet below for the pet itself |
 | tmux or your shell prompt | Full pet, works with **any** agent |
 | Editors | `pets render --format=json` to build your own |
 
 The tmux and shell options need nothing from the agent, so they work with Aider,
 Amp, Gemini CLI, or anything else. `pets install` prints the snippets.
+
+Claude Code is the only agent this has been verified against end to end. If you
+run something else and it works, or does not, please open an issue.
 
 ## Reading it
 
@@ -93,12 +96,14 @@ you already fixed.
 ```
   pets party                                  6 alive
 
-  /<•_•>\   cat  ✦     spike/wasm-build      ♥♥♡♡♡  22△ 1↑
-  {•_•}     fox  ✦     chore/bump-deps       ♥♥♥♥♡  1↑
-  o[•_•]o   seal ✦✦✦   docs/install-rewrite  ♥♥♥♥♡  1↑
-  <•_•>     moth ✦     feat/checkout-flow    ♥♥♥♥♡  1↑
-  o[•_•]o   seal ✦✦✦   fix/session-leak      ♥♥♥♥♡  1↑
-  <@_@>     moth ✦     refactor/auth-guard   ♥♡♡♡♡  41△ 13↑
+  /x_x\     cat  ✦     spike/wasm-build     ♡♡♡♡♡  22△ 9↑ ✗
+  <@_@>     moth ✦     refactor/auth-guard  ♥♡♡♡♡  41△ 13↑
+  \(¬_¬)/   crow ✦✦✦   docs/api-reference   ♥♥♥♡♡  1△ 1↑
+  o[¬_¬]o   seal ✦✦✦   fix/session-leak     ♥♥♥♡♡  2△ 1↑
+  {•_•}     fox  ✦     chore/bump-deps      ♥♥♥♥♡  3↑
+  <•_•>     moth ✦     feat/checkout-flow   ♥♥♥♥♡  1↑
+
+  worst: cat · uncommitted, unpushed, tests
 ```
 
 Worst first, so whatever needs attention is at the top. Long lists are trimmed;
