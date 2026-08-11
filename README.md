@@ -15,16 +15,23 @@ and which one is in trouble.
 
 ## Install
 
-**macOS**
+**Linux and macOS**
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/TevanB/parallel-harness-pets/main/install.sh | sh
+pets install
+```
+
+**macOS with Homebrew**
 
 ```sh
 brew install TevanB/tap/parallel-harness-pets
 pets install
 ```
 
-**Linux and Windows** — grab an archive from
-[Releases](https://github.com/TevanB/parallel-harness-pets/releases) and put
-`pets` on your `PATH`, then run `pets install`.
+**Windows** — grab an archive from
+[Releases](https://github.com/TevanB/parallel-harness-pets/releases), put `pets`
+on your `PATH`, then run `pets install`.
 
 **With Go** — `go install github.com/TevanB/parallel-harness-pets/cmd/pets@latest`
 
