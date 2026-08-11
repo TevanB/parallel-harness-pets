@@ -67,20 +67,15 @@ cosmetic status line gets deleted the first time it is mildly annoying.
 
 ## Install
 
-Download the archive for your platform from
-[Releases](https://github.com/TevanB/parallel-harness-pets/releases), put `pets`
-somewhere on your `PATH`, then:
-
 ```sh
+brew install TevanB/tap/parallel-harness-pets
 pets install
 ```
 
-Or from source, if you have Go:
-
-```sh
-go install github.com/TevanB/parallel-harness-pets/cmd/pets@latest
-pets install
-```
+Or grab an archive from
+[Releases](https://github.com/TevanB/parallel-harness-pets/releases) and put
+`pets` on your `PATH`, or build it with
+`go install github.com/TevanB/parallel-harness-pets/cmd/pets@latest`.
 
 One static binary. No bash, no jq, no Python, no Node, nothing to boot. `pets
 install` detects which agents you actually have and wires itself into them, then
