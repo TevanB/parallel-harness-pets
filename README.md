@@ -1,5 +1,9 @@
 # parallel-harness-pets
 
+[![MIT](https://img.shields.io/badge/licence-MIT-5fd7af?style=flat)](LICENSE)
+[![Release](https://img.shields.io/github/v/release/TevvvB/parallel-harness-pets?style=flat&color=5fd7ff)](https://github.com/TevvvB/parallel-harness-pets/releases)
+[![Buy me a coffee](https://img.shields.io/badge/buy_me_a_coffee-ffdd00?style=flat&logo=buymeacoffee&logoColor=black)](https://buymeacoffee.com/tevvvb)
+
 A creature for every git worktree, living in your coding agent's status line.
 Its species comes from the branch name, and its mood tracks how tidy that branch is.
 
