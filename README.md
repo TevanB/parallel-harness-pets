@@ -1,25 +1,28 @@
-# parallel-harness-pets
+<p align="center">
+  <img src="docs/header.png" alt="parallel-harness-pets" width="100%" />
+</p>
 
-[![MIT](https://img.shields.io/badge/licence-MIT-5fd7af?style=flat)](LICENSE)
-[![Release](https://img.shields.io/github/v/release/TevvvB/parallel-harness-pets?style=flat&color=5fd7ff)](https://github.com/TevvvB/parallel-harness-pets/releases)
-[![Buy me a coffee](https://img.shields.io/badge/buy_me_a_coffee-ffdd00?style=flat&logo=buymeacoffee&logoColor=black)](https://buymeacoffee.com/tevvvb)
+<p align="center">
+  <strong>A creature for every git worktree, living in your coding agent's status line.</strong>
+</p>
 
-<sub>*If you like, I like coffee :)*</sub>
+<p align="center">
+  Its species comes from the branch name, and its mood tracks how tidy that branch is.
+  Most terminal pets belong to <i>you</i>: one creature, nurtured over time. This one belongs
+  to a <b>worktree</b>. Six worktrees means six creatures alive at once, each recognisable at
+  a glance, so you always know which session you are looking at and which one is in trouble.
+</p>
 
-A creature for every git worktree, living in your coding agent's status line.
-Its species comes from the branch name, and its mood tracks how tidy that branch is.
+<div align="center">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/licence-MIT-5fd7af?style=flat" alt="MIT"></a>
+  <a href="https://github.com/TevvvB/parallel-harness-pets/releases"><img src="https://img.shields.io/github/v/release/TevvvB/parallel-harness-pets?style=flat&color=5fd7ff" alt="Release"></a>
+  <a href="https://buymeacoffee.com/tevvvb"><img src="https://img.shields.io/badge/buy_me_a_coffee-ffdd00?style=flat&logo=buymeacoffee&logoColor=black" alt="Buy me a coffee"></a>
+  <p><sub><i>If you like, I like coffee :)</i></sub></p>
+</div>
 
-```
-<•_•>    moth · feat/checkout-flow  ♥♥♥♥♡  2△        ·  Opus 5
-o[@_@]o  seal · fix/session-leak    ♥♡♡♡♡  28△ 27↑  ·  Opus 5
-```
-
-![parallel-harness-pets in six worktrees](docs/demo.gif)
-
-Most terminal pets belong to *you*: one creature, nurtured over time. This one
-belongs to a **worktree**. Six worktrees means six creatures alive at once, each
-recognisable at a glance, so you always know which session you are looking at
-and which one is in trouble.
+<p align="center">
+  <img src="docs/demo.gif" alt="six worktrees, six creatures" width="100%" />
+</p>
 
 ## Install
 
