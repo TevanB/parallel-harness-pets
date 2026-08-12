@@ -124,6 +124,10 @@ banded by rarity:
 | legendary | 3.5% | `✦✦✦✦` |
 | mythic | 0.5% | `✦✦✦✦✦` |
 
+Anything rare or above wears its band's colour, so you can see what you rolled
+without counting stars. Commons and uncommons take a hue of their own, which is
+what keeps two branches on the same creature telling apart.
+
 Shiny is a separate 1-in-128 roll, so even a common can be a find. `pets den`
 shows your collection.
 

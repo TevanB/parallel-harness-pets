@@ -105,8 +105,16 @@ var byRarity = func() map[Rarity][]Species {
 	return grouped
 }()
 
-// Hashed independently of species so two live branches on the same creature still read apart.
-var palette = []int{173, 213, 208, 114, 141, 203, 187, 218, 79, 179, 81, 156}
+// Common and uncommon creatures take a hue hashed independently of species, so
+// two live branches on the same creature still read apart. The colours reserved
+// for the higher bands are deliberately absent here, so an ordinary creature can
+// never be mistaken for a rare one.
+var palette = []int{173, 208, 114, 203, 187, 218, 79, 179, 156}
+
+// A rare creature wears its band. This is what makes rarity legible at a glance
+// rather than a star count nobody decodes, and the colours match the ones the
+// rarity stars already use.
+var bandColor = map[Rarity]int{Rare: 81, Legendary: 141, Mythic: 213}
 
 // shinyOdds is an independent roll, so a shiny common is its own kind of find.
 const shinyOdds = 128
@@ -171,9 +179,13 @@ func For(branch string) Pet {
 	if len(pool) == 0 {
 		pool = byRarity[Common]
 	}
+	color, reserved := bandColor[band]
+	if !reserved {
+		color = palette[Hash("hue:"+branch)%len(palette)]
+	}
 	return Pet{
 		Species: pool[Hash(branch)%len(pool)],
-		Color:   palette[Hash("hue:"+branch)%len(palette)],
+		Color:   color,
 		Shiny:   Hash("shiny:"+branch)%shinyOdds == 0,
 	}
 }

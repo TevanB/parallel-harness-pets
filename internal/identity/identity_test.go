@@ -5,10 +5,9 @@ import (
 	"testing"
 )
 
-// Golden values for the current roster. Identity reshuffled exactly once, when
-// rarity bands landed: before that a branch picked uniformly from 16 species,
-// and afterwards it picks a band first. That was a deliberate one-time change,
-// and this table exists so it never happens again by accident.
+// Golden values for the current roster. Species have been stable since rarity
+// bands landed; colours moved once after that, when rare and above started
+// wearing their band. This table exists so neither changes again by accident.
 func TestForIsPinned(t *testing.T) {
 	cases := []struct {
 		branch  string
@@ -17,19 +16,19 @@ func TestForIsPinned(t *testing.T) {
 		rarity  Rarity
 		shiny   bool
 	}{
-		{"main", "mouse", 81, Common, false},
-		{"master", "vole", 179, Common, false},
-		{"develop", "vole", 187, Common, false},
-		{"trunk", "wren", 156, Common, false},
-		{"feat/oauth-refresh", "koi", 156, Rare, false},
-		{"refactor/auth-guard", "moth", 173, Common, false},
-		{"agent-task-1785874237", "snail", 79, Common, false},
-		{"claude/wiki-updates", "gecko", 173, Uncommon, false},
-		{"spike/wasm-build", "cat", 208, Common, false},
-		{"fix/n-plus-one-query", "owl", 213, Uncommon, false},
-		{"chore/bump-deps", "fox", 81, Common, false},
-		{"docs/install-rewrite", "seal", 187, Rare, false},
-		{"a", "crab", 141, Common, false},
+		{"main", "mouse", 208, Common, false},
+		{"master", "vole", 203, Common, false},
+		{"develop", "vole", 79, Common, false},
+		{"trunk", "wren", 114, Common, false},
+		{"feat/oauth-refresh", "koi", 81, Rare, false},
+		{"refactor/auth-guard", "moth", 203, Common, false},
+		{"agent-task-1785874237", "snail", 114, Common, false},
+		{"claude/wiki-updates", "gecko", 79, Uncommon, false},
+		{"spike/wasm-build", "cat", 156, Common, false},
+		{"fix/n-plus-one-query", "owl", 208, Uncommon, false},
+		{"chore/bump-deps", "fox", 187, Common, false},
+		{"docs/install-rewrite", "seal", 81, Rare, false},
+		{"a", "crab", 187, Common, false},
 	}
 
 	for _, testCase := range cases {
@@ -146,5 +145,32 @@ func TestHashIsStable(t *testing.T) {
 			t.Errorf("hash collision across seeds at %q, which would tie two traits together", seed)
 		}
 		seen[Hash(seed)] = true
+	}
+}
+
+// Rarity has to be visible without decoding a star count, so anything rare or
+// above wears its band's colour. Commons and uncommons keep an independent hue,
+// which is what stops two live branches on the same creature reading alike.
+func TestRareCreaturesWearTheirBand(t *testing.T) {
+	bands := map[Rarity]int{}
+	ordinary := map[int]bool{}
+	for index := 0; index < 4000; index++ {
+		pet := For(fmt.Sprintf("feat/ticket-%d", index))
+		if pet.Rarity >= Rare {
+			if seen, ok := bands[pet.Rarity]; ok && seen != pet.Color {
+				t.Fatalf("%s appeared in two colours, %d and %d", pet.Rarity, seen, pet.Color)
+			}
+			bands[pet.Rarity] = pet.Color
+			continue
+		}
+		ordinary[pet.Color] = true
+	}
+	for band, color := range bands {
+		if ordinary[color] {
+			t.Errorf("%s uses colour %d, which an ordinary creature can also have", band, color)
+		}
+	}
+	if len(ordinary) < 5 {
+		t.Errorf("only %d hues left for common and uncommon, too few to tell branches apart", len(ordinary))
 	}
 }
