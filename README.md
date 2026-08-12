@@ -8,6 +8,8 @@ Its species comes from the branch name, and its mood tracks how tidy that branch
 o[@_@]o  seal · fix/session-leak    ♥♡♡♡♡  28△ 27↑  ·  Opus 5
 ```
 
+![parallel-harness-pets in six worktrees](docs/demo.gif)
+
 Most terminal pets belong to *you*: one creature, nurtured over time. This one
 belongs to a **worktree**. Six worktrees means six creatures alive at once, each
 recognisable at a glance, so you always know which session you are looking at
