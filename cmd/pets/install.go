@@ -47,6 +47,20 @@ func installCommand(action string, args []string) {
 		fmt.Println("\nIf you added the tmux or shell snippets by hand, remove those too.")
 		return
 	}
+
+	// The snippets are configuration, and ending on them leaves somebody with
+	// nothing to try. One creature in one repo is also not the point, so send
+	// them to a second worktree, which is where this stops looking like a
+	// status line and starts looking like the thing it is.
+	switch requested {
+	case "tmux":
+		fmt.Print("\n" + harness.TmuxSnippet(binary))
+		return
+	case "shell":
+		fmt.Print("\n" + harness.ShellSnippet(binary))
+		return
+	}
+
 	if len(targets) == 0 {
 		fmt.Println("No Claude Code or Codex config directory found, so nothing was wired up.")
 		fmt.Println("If one of them is installed but has not been run yet, name it directly:")
@@ -54,7 +68,12 @@ func installCommand(action string, args []string) {
 	} else {
 		fmt.Println("\nStart a new session to see it. Agents read hooks at startup.")
 	}
-	fmt.Println("\nThe snippets below need no harness support and work with any agent:")
-	fmt.Print("\n" + harness.TmuxSnippet(binary))
-	fmt.Print("\n" + harness.ShellSnippet(binary))
+
+	fmt.Println("\nThen open a worktree, and a creature hatches for it:")
+	fmt.Println("\n  git worktree add ../my-feature -b feat/my-feature")
+	fmt.Println("\n  pets party    every live worktree at once")
+	fmt.Println("  pets den      what you have collected")
+	fmt.Println("\nFor tmux or a shell prompt, which work with any agent at all:")
+	fmt.Println("\n  pets install --harness=tmux")
+	fmt.Println("  pets install --harness=shell")
 }

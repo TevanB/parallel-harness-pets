@@ -1,0 +1,43 @@
+name: Bug report
+description: Something behaves differently to how it reads
+labels: [bug]
+body:
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: Output of `pets version`
+      placeholder: "0.1.2"
+    validations:
+      required: true
+  - type: dropdown
+    id: agent
+    attributes:
+      label: Where it happens
+      options:
+        - Claude Code
+        - Codex CLI
+        - tmux
+        - shell prompt
+        - not agent specific
+    validations:
+      required: true
+  - type: input
+    id: platform
+    attributes:
+      label: OS and architecture
+      placeholder: "macOS 15 arm64, or Ubuntu 24.04 amd64"
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened, and what you expected instead
+    validations:
+      required: true
+  - type: textarea
+    id: card
+    attributes:
+      label: Output of `pets card`
+      description: Run it in the worktree that is misbehaving. Redact the path if you would rather.
+      render: text

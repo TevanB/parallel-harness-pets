@@ -209,9 +209,12 @@ echo "clippy=$(cargo clippy --message-format=short 2>&1 | grep -c '^warning')"
 
 ## Contributing
 
-Two ways in, and only one needs Go. **Creatures** are data files, so adding one
-means writing six lines and no code. **Signals** are any executable that prints
-`key=value`. Issues and pull requests welcome.
+Two things are easy to contribute. A **creature** is one line in a slice, with a
+name, the two fragments that bracket its face, and a rarity band. A **signal**
+is any executable that prints `key=value`, so teaching the pet to read your
+stack takes four lines of shell and no Go at all.
+
+See [CONTRIBUTING.md](CONTRIBUTING.md). Issues and pull requests welcome.
 
 ## Licence
 

@@ -1,0 +1,44 @@
+name: New creature
+description: Propose a creature for the roster
+labels: [creature]
+body:
+  - type: input
+    id: name
+    attributes:
+      label: Name
+      placeholder: newt
+    validations:
+      required: true
+  - type: input
+    id: frame
+    attributes:
+      label: Frame
+      description: The two fragments that bracket the face, at most three characters each
+      placeholder: "~[  and  ]~"
+    validations:
+      required: true
+  - type: dropdown
+    id: rarity
+    attributes:
+      label: Rarity
+      options: [Common, Uncommon, Rare, Legendary, Mythic]
+    validations:
+      required: true
+  - type: textarea
+    id: preview
+    attributes:
+      label: How it looks
+      description: Paste it happy and unhappy, so we can see it at both ends
+      value: |
+        ~[•ᴗ•]~
+        ~[x_x]~
+      render: text
+    validations:
+      required: true
+  - type: checkboxes
+    id: original
+    attributes:
+      label: Originality
+      options:
+        - label: This is original, and not based on any existing character
+          required: true
