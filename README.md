@@ -53,6 +53,15 @@ afterwards. `pets uninstall` reverses it.
 If an agent is installed but has never been run, it has no config directory yet,
 so name it directly: `pets install --harness=claude`.
 
+## Star parallel-harness-pets
+
+If a creature in your status line makes running several agents at once a little
+easier to keep straight, a star helps other people find it.
+
+<p align="center">
+  <img src="docs/star-repo.gif" alt="Starring the repository" width="100%" />
+</p>
+
 ## Updating
 
 | Installed with | Update with |
