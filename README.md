@@ -62,6 +62,14 @@ so name it directly: `pets install --harness=claude`.
 | Go | `go install github.com/TevvvB/parallel-harness-pets/cmd/pets@latest` |
 | A release archive | download the new one |
 
+Homebrew refuses to upgrade a cask from a tap it does not trust, so the first
+upgrade may stop with *"Refusing to load cask ... from untrusted tap"*. Trust it
+once and it will not ask again:
+
+```sh
+brew trust TevvvB/tap
+```
+
 `pets card`, `pets party` and `pets den` check once a day whether a newer
 release exists and print a line if so. Nothing else ever does: no hook and
 nothing on the status line path touches the network. Turn it off with
