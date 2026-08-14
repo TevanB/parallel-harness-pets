@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/TevvvB/parallel-harness-pets/internal/agents"
 	"github.com/TevvvB/parallel-harness-pets/internal/config"
 	"github.com/TevvvB/parallel-harness-pets/internal/gitrepo"
 	"github.com/TevvvB/parallel-harness-pets/internal/identity"
@@ -19,6 +20,7 @@ import (
 	"github.com/TevvvB/parallel-harness-pets/internal/signal"
 	"github.com/TevvvB/parallel-harness-pets/internal/state"
 	"github.com/TevvvB/parallel-harness-pets/internal/verdict"
+	"github.com/TevvvB/parallel-harness-pets/internal/visits"
 )
 
 var version = "dev"
@@ -85,9 +87,22 @@ func dispatch(args []string) int {
 
 // hookPayload is the shape both Claude Code and Codex pipe into a hook.
 type hookPayload struct {
-	Cwd       string `json:"cwd"`
-	Workspace struct {
+	// SessionID identifies one running agent. It is what makes a pet belong to
+	// an agent rather than to the directory the agent happens to be in.
+	SessionID string `json:"session_id"`
+	// SessionName is the harness's human label for this agent. It is what turns
+	// a list of pets into something readable instead of a column of UUIDs.
+	SessionName string `json:"session_name"`
+	Cwd         string `json:"cwd"`
+	Workspace   struct {
 		CurrentDir string `json:"current_dir"`
+		// GitWorktree and Repo name the den. The harness has already resolved
+		// both, so the render path never has to ask git for them.
+		GitWorktree string `json:"git_worktree"`
+		Repo        struct {
+			Owner string `json:"owner"`
+			Name  string `json:"name"`
+		} `json:"repo"`
 	} `json:"workspace"`
 	Model struct {
 		DisplayName string `json:"display_name"`
@@ -96,6 +111,27 @@ type hookPayload struct {
 		Command string `json:"command"`
 	} `json:"tool_input"`
 	ToolResponse json.RawMessage `json:"tool_response"`
+}
+
+// agent is what a surface knows about the caller: which agent is asking, and
+// which den it is asking from. Every field is optional, because tmux, a shell
+// prompt and `pets card` supply none of them.
+type agent struct {
+	SessionID string
+	Name      string
+	Repo      string
+	Worktree  string
+	Model     string
+}
+
+func (p hookPayload) agent() agent {
+	return agent{
+		SessionID: p.SessionID,
+		Name:      p.SessionName,
+		Repo:      p.Workspace.Repo.Name,
+		Worktree:  p.Workspace.GitWorktree,
+		Model:     p.Model.DisplayName,
+	}
 }
 
 // stdinDeadline bounds how long a surface may take to hand over its payload.
@@ -157,7 +193,7 @@ func (p hookPayload) directory() string {
 
 // build assembles a view from cache only. It never runs git, because this is the
 // path that executes once a second in every open session.
-func build(directory, model string, settings config.Config) (render.View, bool) {
+func build(directory string, who agent, settings config.Config) (render.View, bool) {
 	repo, found := gitrepo.Locate(directory)
 	if !found {
 		return render.View{}, false
@@ -171,13 +207,48 @@ func build(directory, model string, settings config.Config) (render.View, bool) 
 		refreshInBackground(repo.Root)
 	}
 
+	// The pet belongs to the agent. Surfaces with no session to key on — tmux, a
+	// shell prompt, `pets card` — fall back to the branch, which is what the pet
+	// meant before agents were modelled at all.
+	petKey := who.SessionID
+	if petKey == "" {
+		petKey = repo.Branch
+	}
+	// The harness names the den when it can. Git's own layout answers otherwise,
+	// and agrees with the harness: both call this worktree by the same name.
+	worktree := who.Worktree
+	if worktree == "" {
+		worktree = repo.Worktree()
+	}
+	project := who.Repo
+	if project == "" {
+		project = repo.Project()
+	}
+
+	den := identity.DenKey(project, worktree)
+	// Pin this agent to its den. Without this the pet is derived and then
+	// forgotten, so a den can never say who is in it.
+	agents.Touch(cacheDir, agents.Record{
+		Session: who.SessionID,
+		Den:     den,
+		Root:    repo.Root,
+		Branch:  repo.Branch,
+		Name:    who.Name,
+	}, now)
+	// A den's memory of who has worked in it. The register above forgets an
+	// agent the moment it moves; this is the half that does not.
+	visits.Record(cacheDir, den, who.SessionID, now)
+
 	view := render.View{
-		Pet:      identity.For(repo.Branch),
+		Pet:      identity.For(petKey),
+		Place:    identity.PlaceFor(project, worktree),
+		Den:      den,
+		Session:  who.SessionID,
 		Branch:   repo.Branch,
 		Root:     repo.Root,
 		State:    current,
 		Tests:    tests,
-		Model:    model,
+		Model:    who.Model,
 		HasState: hasState,
 	}
 	if hasState {
@@ -224,9 +295,13 @@ func renderCommand(args []string) {
 	if directory == "" {
 		directory = payload.directory()
 	}
-	view, found := build(directory, payload.Model.DisplayName, settings)
+	view, found := build(directory, payload.agent(), settings)
 	format := flagValue(args, "format", "statusline")
 	if !found {
+		// Outside a worktree an agent is still running, so it keeps breathing in
+		// whichever den it was last seen in. Without this, stepping into /tmp
+		// made a live session vanish from every listing 90 seconds later.
+		agents.Beat(config.StateDir(), payload.SessionID, time.Now())
 		if format == "json" {
 			fmt.Println(`{"ready":false}`)
 		}
@@ -266,10 +341,21 @@ func cardCommand(args []string) {
 	}
 	// The card is on demand, so it can afford to be current rather than cached.
 	probe(repo.Root, settings)
-	view, ok := build(repo.Root, "", settings)
+	view, ok := build(repo.Root, agent{}, settings)
 	if !ok {
 		os.Exit(1)
 	}
+	// The card is a den's readout, so it lists everyone in the den rather than
+	// guessing at a single pet it has no session to identify.
+	now := time.Now()
+	view.Residents = agents.InDen(config.StateDir(), view.Den, now)
+	// The card runs from a shell with no session of its own, so without this it
+	// shows a branch-derived creature nobody in the den is actually using.
+	if representative, occupied := agents.Representative(view.Residents, now); occupied {
+		view.Pet = identity.For(representative.Session)
+		view.Session = representative.Session
+	}
+	view.Visitors = visits.ForDen(config.StateDir(), view.Den)
 	fmt.Print(render.Card(view, settings))
 	fmt.Print(updateNotice(settings))
 }
@@ -304,16 +390,32 @@ func probe(root string, settings config.Config) {
 }
 
 func recordCommand() {
-	payload := readPayload()
+	info, err := os.Stdin.Stat()
+	if err != nil || info.Mode()&os.ModeCharDevice != 0 {
+		return
+	}
+	recordFrom(os.Stdin, config.StateDir(), time.Now())
+}
+
+// recordFrom is recordCommand's testable core.
+//
+// It takes the bytes a harness actually pipes in and returns the verdict it
+// wrote, so a test can assert what landed in the cache rather than only what
+// the parser returned. The hook's product is a file with an expiry, and a
+// function that decodes correctly while writing the wrong thing would satisfy
+// any test that only checks a return value.
+func recordFrom(source io.Reader, cacheDir string, now time.Time) (string, bool) {
+	payload := parsePayload(source, stdinDeadline)
 	repo, found := gitrepo.Locate(payload.directory())
 	if !found {
-		return
+		return "", false
 	}
 	result, ok := verdict.Of(payload.ToolInput.Command, responseText(payload.ToolResponse))
 	if !ok {
-		return
+		return "", false
 	}
-	state.WriteTests(config.StateDir(), repo.Key(), result, time.Now())
+	state.WriteTests(cacheDir, repo.Key(), result, now)
+	return result, true
 }
 
 // responseText decodes what a runner actually printed.
@@ -353,7 +455,7 @@ func quipCommand() {
 		return
 	}
 	probe(repo.Root, settings)
-	view, ok := build(repo.Root, "", settings)
+	view, ok := build(repo.Root, payload.agent(), settings)
 	if !ok {
 		return
 	}

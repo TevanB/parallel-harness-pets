@@ -3,14 +3,15 @@
 </p>
 
 <p align="center">
-  <strong>A creature for every git worktree, living in your coding agent's status line.</strong>
+  <strong>A creature for every agent, in a den for every git worktree.</strong>
 </p>
 
 <p align="center">
-  Its species comes from the branch name, and its mood tracks how tidy that branch is.
   Most terminal pets belong to <i>you</i>: one creature, nurtured over time. This one belongs
-  to a <b>worktree</b>. Six worktrees means six creatures alive at once, each recognisable at
-  a glance, so you always know which session you are looking at and which one is in trouble.
+  to an <b>agent</b>. Every worktree is a den with a name, every agent working in it gets its
+  own creature, and its mood tracks how tidy that worktree is. Six agents means six creatures
+  alive at once, each recognisable at a glance, so you always know which session you are
+  looking at and which one is in trouble.
 </p>
 
 <div align="center">
@@ -103,6 +104,7 @@ run something else and it works, or does not, please open an issue.
 
 | Glyph | Meaning |
 |---|---|
+| `@ DXB` | the den: which worktree, as a flight code |
 | `•ᴗ•` `•_•` `¬_¬` `>_<` `@_@` `x_x` | mood, five hearts down to zero |
 | `7△` | 7 uncommitted files |
 | `3↑` | 3 unpushed commits |
@@ -122,20 +124,23 @@ you already fixed.
 ## Seeing every worktree at once
 
 ```
-  pets party                                  6 alive
+  pets party                              4 dens · 3 agents
 
-  /x_x\     cat  ✦     spike/wasm-build     ♡♡♡♡♡  22△ 9↑ ✗
-  <@_@>     moth ✦     refactor/auth-guard  ♥♡♡♡♡  41△ 13↑
-  \(¬_¬)/   crow ✦✦✦   docs/api-reference   ♥♥♥♡♡  1△ 1↑
-  o[¬_¬]o   seal ✦✦✦   fix/session-leak     ♥♥♥♡♡  2△ 1↑
-  {•_•}     fox  ✦     chore/bump-deps      ♥♥♥♥♡  3↑
-  <•_•>     moth ✦     feat/checkout-flow   ♥♥♥♥♡  1↑
+  @PAR (•_•)     otter ✦     refactor/auth-guard  ♥♥♥♥♡  3△
+       (•_•)     otter     fix the flaky auth test               just now
+       /•_•\     cat       audit the session middleware          just now
+  @SYD -[•_•]-   carp  ✦     spike/wasm-build     ♥♥♥♥♡  9△
+       -[•_•]-   carp      port the wasm build to esbuild        just now
+  @MEX {•ᴗ•}     fox   ✦     chore/bump-deps      ♥♥♥♥♥
+  @IST \(•ᴗ•)/   crow  ✦✦✦   docs/api-reference   ♥♥♥♥♥
 
-  worst: cat · uncommitted, unpushed, tests
+  worst: otter · uncommitted
 ```
 
-Worst first, so whatever needs attention is at the top. Long lists are trimmed;
-`pets party --all` shows everything.
+Worst first, so whatever needs attention is at the top. Dens with agents in them
+list who is there, with the session's own name, so two agents sharing a worktree
+are two creatures rather than one. Empty dens still show a creature. Long lists
+are trimmed; `pets party --all` shows everything.
 
 ## Collecting them
 
@@ -157,10 +162,10 @@ what keeps two branches on the same creature telling apart.
 Shiny is a separate 1-in-128 roll, so even a common can be a find. `pets den`
 shows your collection.
 
-The same branch name always summons the same creature, on any machine, so a
-silhouette is a reliable way to recognise a session. The only way to roll a new
-one is to open a new worktree, and a creature joins your den once that worktree
-has a commit.
+A creature belongs to an agent and lasts as long as that session does, so
+starting a session is a fresh roll. Dens are the stable half: the same repo and
+worktree resolve to the same city on any machine, with nothing stored, and a den
+remembers every agent that has worked in it even after they have moved on.
 
 ## Commands
 

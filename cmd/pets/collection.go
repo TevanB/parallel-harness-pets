@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/TevvvB/parallel-harness-pets/internal/agents"
 	"github.com/TevvvB/parallel-harness-pets/internal/config"
 	"github.com/TevvvB/parallel-harness-pets/internal/den"
 	"github.com/TevvvB/parallel-harness-pets/internal/gitrepo"
@@ -39,6 +40,12 @@ func partyCommand(args []string) {
 	cacheDir := config.StateDir()
 	now := time.Now()
 
+	// Read the register once and group, rather than re-scanning it per worktree.
+	byDen := map[string][]agents.Record{}
+	for _, record := range agents.All(cacheDir, now) {
+		byDen[record.Den] = append(byDen[record.Den], record)
+	}
+
 	var views []render.View
 	for _, current := range state.All(cacheDir) {
 		repo, found := gitrepo.Locate(current.Root)
@@ -49,14 +56,25 @@ func partyCommand(args []string) {
 			refreshInBackground(repo.Root)
 		}
 		tests := state.ReadTests(cacheDir, repo.Key(), now)
+		denKey := identity.DenKey(repo.Project(), repo.Worktree())
+		// A den always shows a creature, but it belongs to whoever is working
+		// there when anyone is. Only an empty den falls back to the branch.
+		residents := byDen[denKey]
+		petKey := repo.Branch
+		if representative, occupied := agents.Representative(residents, now); occupied {
+			petKey = representative.Session
+		}
 		views = append(views, render.View{
-			Pet:      identity.For(repo.Branch),
-			Branch:   repo.Branch,
-			Root:     repo.Root,
-			State:    current,
-			Tests:    tests,
-			Score:    score.Of(current, tests, settings),
-			HasState: true,
+			Pet:       identity.For(petKey),
+			Place:     identity.PlaceFor(repo.Project(), repo.Worktree()),
+			Den:       denKey,
+			Residents: residents,
+			Branch:    repo.Branch,
+			Root:      repo.Root,
+			State:     current,
+			Tests:     tests,
+			Score:     score.Of(current, tests, settings),
+			HasState:  true,
 		})
 	}
 	showAll := false
@@ -65,7 +83,7 @@ func partyCommand(args []string) {
 			showAll = true
 		}
 	}
-	fmt.Print(render.Party(views, settings, showAll))
+	fmt.Print(render.Party(views, settings, showAll, now))
 	fmt.Print(updateNotice(settings))
 }
 
