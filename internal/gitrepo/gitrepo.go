@@ -94,6 +94,26 @@ func (r Repo) Key() string {
 	return fmt.Sprintf("%s-%08x", trimmed, digest.Sum32())
 }
 
+// Worktree is the name git itself uses for this worktree, matching what a
+// harness reports as workspace.git_worktree. A linked worktree keeps its git
+// directory at <main>/.git/worktrees/<name>, so the name is already on disk.
+func (r Repo) Worktree() string {
+	if parent := filepath.Dir(r.GitDir); filepath.Base(parent) == "worktrees" {
+		return filepath.Base(r.GitDir)
+	}
+	return filepath.Base(r.Root)
+}
+
+// Project is the repository every one of its worktrees shares, so sibling
+// worktrees of one repo cannot be mistaken for worktrees of another.
+func (r Repo) Project() string {
+	if parent := filepath.Dir(r.GitDir); filepath.Base(parent) == "worktrees" {
+		// <main>/.git/worktrees/<name> -> <main>
+		return filepath.Base(filepath.Dir(filepath.Dir(parent)))
+	}
+	return filepath.Base(r.Root)
+}
+
 // DefaultBranch resolves what this repo calls its trunk, so master and trunk
 // repos are not silently compared against a main that does not exist.
 func DefaultBranch(root, override string) string {
