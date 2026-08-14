@@ -15,6 +15,7 @@ import (
 	"github.com/TevvvB/parallel-harness-pets/internal/identity"
 	"github.com/TevvvB/parallel-harness-pets/internal/score"
 	"github.com/TevvvB/parallel-harness-pets/internal/state"
+	"github.com/TevvvB/parallel-harness-pets/internal/visits"
 )
 
 const (
@@ -34,13 +35,16 @@ type View struct {
 	Den       string
 	Session   string
 	Residents []agents.Record
-	Branch    string
-	Root      string
-	Score     score.Result
-	State     state.State
-	Tests     string
-	Model     string
-	HasState  bool
+	// Visitors is everyone who has ever worked in this den, including the ones
+	// who have long since moved on.
+	Visitors []visits.Visit
+	Branch   string
+	Root     string
+	Score    score.Result
+	State    state.State
+	Tests    string
+	Model    string
+	HasState bool
 }
 
 // Home is the den's compact form: the flight code, marked with an "at" so a
@@ -290,6 +294,36 @@ func Residents(v View, now time.Time) string {
 	return out.String()
 }
 
+// PassedThrough is the den's memory: agents that worked here and have gone.
+//
+// Only the ones no longer present are listed, because the ones still here are
+// already above under Residents and repeating them reads as double counting.
+func PassedThrough(v View, now time.Time) string {
+	here := map[string]bool{}
+	for _, resident := range v.Residents {
+		here[resident.Session] = true
+	}
+	var gone []visits.Visit
+	for _, visit := range v.Visitors {
+		if !here[visit.Session] {
+			gone = append(gone, visit)
+		}
+	}
+	if len(gone) == 0 {
+		return ""
+	}
+	var out strings.Builder
+	fmt.Fprintf(&out, "\n  %s%d passed through%s\n\n", dim, len(gone), reset)
+	for _, visit := range gone {
+		pet := identity.For(visit.Session)
+		fmt.Fprintf(&out, "    %s%s  %s%s  %s%s\n",
+			hue(pet.Color), pad(pet.Prefix+"-.-"+pet.Suffix, 9),
+			pad(pet.Name, 9), reset,
+			dim+"last here "+since(visit.Last, now), reset)
+	}
+	return out.String()
+}
+
 // Card is the full readout, with every penalised signal called out in amber.
 func Card(v View, settings config.Config) string {
 	var out strings.Builder
@@ -334,7 +368,9 @@ func Card(v View, settings config.Config) string {
 	for name, value := range v.State.External {
 		row(name, fmt.Sprint(value), false)
 	}
-	out.WriteString(Residents(v, time.Now()))
+	now := time.Now()
+	out.WriteString(Residents(v, now))
+	out.WriteString(PassedThrough(v, now))
 	fmt.Fprintln(&out)
 	return out.String()
 }

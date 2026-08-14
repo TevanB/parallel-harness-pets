@@ -20,6 +20,7 @@ import (
 	"github.com/TevvvB/parallel-harness-pets/internal/signal"
 	"github.com/TevvvB/parallel-harness-pets/internal/state"
 	"github.com/TevvvB/parallel-harness-pets/internal/verdict"
+	"github.com/TevvvB/parallel-harness-pets/internal/visits"
 )
 
 var version = "dev"
@@ -234,6 +235,9 @@ func build(directory string, who agent, settings config.Config) (render.View, bo
 		Branch:  repo.Branch,
 		Name:    who.Name,
 	}, now)
+	// A den's memory of who has worked in it. The register above forgets an
+	// agent the moment it moves; this is the half that does not.
+	visits.Record(cacheDir, den, who.SessionID, now)
 
 	view := render.View{
 		Pet:      identity.For(petKey),
@@ -351,6 +355,7 @@ func cardCommand(args []string) {
 		view.Pet = identity.For(representative.Session)
 		view.Session = representative.Session
 	}
+	view.Visitors = visits.ForDen(config.StateDir(), view.Den)
 	fmt.Print(render.Card(view, settings))
 	fmt.Print(updateNotice(settings))
 }
