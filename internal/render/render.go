@@ -8,7 +8,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+	"time"
 
+	"github.com/TevvvB/parallel-harness-pets/internal/agents"
 	"github.com/TevvvB/parallel-harness-pets/internal/config"
 	"github.com/TevvvB/parallel-harness-pets/internal/identity"
 	"github.com/TevvvB/parallel-harness-pets/internal/score"
@@ -25,14 +27,26 @@ const (
 
 // View is everything a surface needs, already resolved.
 type View struct {
-	Pet      identity.Pet
-	Branch   string
-	Root     string
-	Score    score.Result
-	State    state.State
-	Tests    string
-	Model    string
-	HasState bool
+	Pet   identity.Pet
+	Place identity.Place
+	// Den is the storage key for this worktree, and Session identifies which
+	// agent is asking, so a surface can mark "you" among a den's residents.
+	Den       string
+	Session   string
+	Residents []agents.Record
+	Branch    string
+	Root      string
+	Score     score.Result
+	State     state.State
+	Tests     string
+	Model     string
+	HasState  bool
+}
+
+// Home is the den's compact form: the flight code alone, three ASCII cells
+// whatever the city. The status line has no room for the drawing.
+func (v View) Home() string {
+	return v.Place.Code
 }
 
 func hue(color int) string {
@@ -138,13 +152,19 @@ func truncate(text string, max int) string {
 // Statusline is the one-line form Claude Code refreshes every second.
 func Statusline(v View, settings config.Config) string {
 	color := hue(v.Pet.Color)
-	parts := []string{
-		color + v.Body() + reset,
-		color + v.Pet.Name + reset,
-		dim + "·" + reset,
-		label + truncate(v.Branch, settings.Display.BranchLabelMax) + reset,
-		v.hearts(),
+	var parts []string
+	// The den is context and the pet is what you rolled, so the city stays dim
+	// and never competes with the creature for attention.
+	if home := v.Home(); home != "" {
+		parts = append(parts, dim+home+reset)
 	}
+	parts = append(parts,
+		color+v.Body()+reset,
+		color+v.Pet.Name+reset,
+		dim+"·"+reset,
+		label+truncate(v.Branch, settings.Display.BranchLabelMax)+reset,
+		v.hearts(),
+	)
 	if flags := v.Flags(settings); v.HasState && len(flags) > 0 {
 		parts = append(parts, warn+strings.Join(flags, " ")+reset)
 	}
@@ -198,6 +218,70 @@ func JSON(v View, settings config.Config) (string, error) {
 	return string(encoded), err
 }
 
+// since is the human form of how long ago an agent was last heard from, which
+// is the only evidence available that it is still running.
+func since(then, now time.Time) string {
+	gap := now.Sub(then)
+	switch {
+	case gap < 45*time.Second:
+		return "just now"
+	case gap < time.Hour:
+		return fmt.Sprintf("%dm ago", int(gap.Minutes()))
+	case gap < 24*time.Hour:
+		return fmt.Sprintf("%dh ago", int(gap.Hours()))
+	default:
+		return fmt.Sprintf("%dd ago", int(gap.Hours())/24)
+	}
+}
+
+// Residents lists the agents sharing this den, marking which one is asking.
+//
+// This is the view the old model could not express: a worktree held one
+// creature, so a second agent in the same worktree was invisible.
+func Residents(v View, now time.Time) string {
+	if len(v.Residents) == 0 {
+		return ""
+	}
+	var out strings.Builder
+	living := 0
+	for _, resident := range v.Residents {
+		if !resident.Stale(now) {
+			living++
+		}
+	}
+	fmt.Fprintf(&out, "\n  %s%d agent%s in this den%s\n\n",
+		dim, living, map[bool]string{true: "", false: "s"}[living == 1], reset)
+
+	width := 0
+	for _, resident := range v.Residents {
+		pet := identity.For(resident.Session)
+		if size := displayWidth(pet.Prefix + "•ᴗ•" + pet.Suffix); size > width {
+			width = size
+		}
+	}
+	for _, resident := range v.Residents {
+		pet := identity.For(resident.Session)
+		body := pet.Prefix + "•ᴗ•" + pet.Suffix
+		marker, tone := "  ", hue(pet.Color)
+		if resident.Session == v.Session {
+			marker = dim + "→ " + reset
+		}
+		// A stale agent is dimmed rather than hidden: an agent that crashed and
+		// is still on screen is more use than one that silently disappeared.
+		note := ""
+		if resident.Stale(now) {
+			tone, note = dim, dim+"  stale"+reset
+		} else if resident.JustArrived(now) {
+			note = dim + "  just arrived" + reset
+		}
+		fmt.Fprintf(&out, "  %s%s%s%s  %s%s%s  %s%s%s%s\n",
+			marker, tone, pad(body, width), reset,
+			tone, pad(pet.Name, 9), reset,
+			dim, pad(truncate(resident.Label(), 32), 34), since(resident.Seen, now), note)
+	}
+	return out.String()
+}
+
 // Card is the full readout, with every penalised signal called out in amber.
 func Card(v View, settings config.Config) string {
 	var out strings.Builder
@@ -215,8 +299,19 @@ func Card(v View, settings config.Config) string {
 		fmt.Fprintf(&out, "  %s%-14s%s %s\n", dim, name, reset, shown)
 	}
 
+	// The card has room, so the den gets its drawing here. The status line does
+	// not, and only ever sees the glyph and the code.
+	if v.Place.Code != "" {
+		fmt.Fprintf(&out, "\n  %s%s  %s%s\n", dim, v.Home(), v.Place.Name, reset)
+		for _, line := range v.Place.Art {
+			fmt.Fprintf(&out, "  %s%s%s\n", dim, line, reset)
+		}
+	}
 	fmt.Fprintf(&out, "\n  %s%s%s  %s%s%s\n", color, v.Body(), reset, color, v.Pet.Name, reset)
 	fmt.Fprintf(&out, "  %s%s%s\n", dim, strings.Repeat("─", 30), reset)
+	if v.Place.Code != "" {
+		row("den", fmt.Sprintf("%s (%s)", v.Place.Name, v.Place.Code), false)
+	}
 	row("branch", v.Branch, false)
 	row("worktree", v.Root, false)
 	row("mood", fmt.Sprintf("%s  %d/%d", v.hearts(), v.Score.Hearts, score.Max), false)
@@ -231,6 +326,7 @@ func Card(v View, settings config.Config) string {
 	for name, value := range v.State.External {
 		row(name, fmt.Sprint(value), false)
 	}
+	out.WriteString(Residents(v, time.Now()))
 	fmt.Fprintln(&out)
 	return out.String()
 }

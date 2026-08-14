@@ -9,6 +9,7 @@ import (
 	"github.com/TevvvB/parallel-harness-pets/internal/identity"
 	"github.com/TevvvB/parallel-harness-pets/internal/score"
 	"github.com/TevvvB/parallel-harness-pets/internal/state"
+	"time"
 )
 
 // A terminal renders an emoji in two cells but Go counts it as one rune, so
@@ -66,7 +67,7 @@ func TestPartyColumnsAlign(t *testing.T) {
 		view("chore/deps-bump", 4, false),
 		view("spike/graphql", 1, false),
 	}
-	rendered := stripANSI(Party(views, config.Default(), false))
+	rendered := stripANSI(Party(views, config.Default(), false, time.Now()))
 
 	var starts []int
 	for _, line := range strings.Split(rendered, "\n") {
@@ -94,7 +95,7 @@ func TestPartySortsWorstFirst(t *testing.T) {
 		view("spike/graphql", 1, false),
 		view("feat/oauth-flow", 3, false),
 	}
-	rendered := stripANSI(Party(views, config.Default(), false))
+	rendered := stripANSI(Party(views, config.Default(), false, time.Now()))
 	positions := []int{
 		strings.Index(rendered, "spike/graphql"),
 		strings.Index(rendered, "feat/oauth-flow"),
@@ -109,7 +110,7 @@ func TestPartySortsWorstFirst(t *testing.T) {
 }
 
 func TestPartyWithNoWorktrees(t *testing.T) {
-	if out := Party(nil, config.Default(), false); !strings.Contains(out, "no worktrees") {
+	if out := Party(nil, config.Default(), false, time.Now()); !strings.Contains(out, "no worktrees") {
 		t.Errorf("empty party rendered %q", out)
 	}
 }
@@ -151,7 +152,7 @@ func TestPartyCapsTheListAndSaysWhatItHid(t *testing.T) {
 	}
 
 	settings := config.Default()
-	rendered := stripANSI(Party(views, settings, false))
+	rendered := stripANSI(Party(views, settings, false, time.Now()))
 
 	rows := creatureRows(rendered)
 	if rows != settings.Display.PartyLimit {
@@ -160,9 +161,11 @@ func TestPartyCapsTheListAndSaysWhatItHid(t *testing.T) {
 	if !strings.Contains(rendered, "and 9 more, all at full health") {
 		t.Errorf("did not report what it hid:\n%s", rendered)
 	}
-	// The alive count must stay honest even though the list is truncated.
-	if !strings.Contains(rendered, "21 alive") {
-		t.Error("alive count does not reflect every worktree")
+	// The count must stay honest even though the list is truncated. It counts
+	// dens rather than "alive", because a worktree existing never meant an agent
+	// was running in it.
+	if !strings.Contains(rendered, "21 dens") {
+		t.Error("den count does not reflect every worktree")
 	}
 	// The one that matters must survive the cut.
 	if !strings.Contains(rendered, "spike/graphql") {
@@ -175,7 +178,7 @@ func TestPartyAllShowsEverything(t *testing.T) {
 	for index := 0; index < 20; index++ {
 		views = append(views, view(fmt.Sprintf("agent-task-%d", index), 5, false))
 	}
-	rendered := stripANSI(Party(views, config.Default(), true))
+	rendered := stripANSI(Party(views, config.Default(), true, time.Now()))
 	if got := creatureRows(rendered); got != 20 {
 		t.Errorf("--all showed %d worktrees, want 20", got)
 	}

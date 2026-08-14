@@ -38,7 +38,7 @@ func rarityHue(rarity identity.Rarity) string {
 
 // Party is the view no single-pet companion can render: every live worktree at
 // once, with the worst signal across all of them called out at the bottom.
-func Party(views []View, settings config.Config, showAll bool) string {
+func Party(views []View, settings config.Config, showAll bool, now time.Time) string {
 	if len(views) == 0 {
 		return fmt.Sprintf("%s(-.-) no worktrees seen yet. open one.%s\n", dim, reset)
 	}
@@ -61,9 +61,24 @@ func Party(views []View, settings config.Config, showAll bool) string {
 		views = views[:limit]
 	}
 
+	living := 0
+	for _, view := range views {
+		for _, resident := range view.Residents {
+			if !resident.Stale(now) {
+				living++
+			}
+		}
+	}
 	var out strings.Builder
-	fmt.Fprintf(&out, "\n  %spets party%s%s%s%d alive%s\n\n",
-		label, reset, strings.Repeat(" ", 34), dim, alive, reset)
+	// "alive" used to count worktrees, which is what made it a lie: a directory
+	// existing says nothing about whether an agent is running in it.
+	summary := fmt.Sprintf("%d dens", alive)
+	if living > 0 {
+		summary = fmt.Sprintf("%d dens · %d agent%s", alive, living,
+			map[bool]string{true: "", false: "s"}[living == 1])
+	}
+	fmt.Fprintf(&out, "\n  %spets party%s%s%s%s%s\n\n",
+		label, reset, strings.Repeat(" ", 30), dim, summary, reset)
 
 	widestSpecies, widestBranch := 0, 0
 	for _, view := range views {
@@ -84,7 +99,12 @@ func Party(views []View, settings config.Config, showAll bool) string {
 		species := pad(view.Pet.Label(), widestSpecies)
 		branch := pad(truncate(view.Branch, settings.Display.BranchLabelMax), widestBranch)
 
-		fmt.Fprintf(&out, "  %s %s%s%s %s%-5s%s %s%s%s  %s",
+		home := ""
+		if place := view.Home(); place != "" {
+			home = dim + pad(place, 4) + reset
+		}
+		fmt.Fprintf(&out, "  %s%s %s%s%s %s%-5s%s %s%s%s  %s",
+			home,
 			body,
 			hue(view.Pet.Color), species, reset,
 			rarityHue(view.Pet.Rarity), view.Pet.Rarity.Stars(), reset,
@@ -94,6 +114,20 @@ func Party(views []View, settings config.Config, showAll bool) string {
 			fmt.Fprintf(&out, "  %s%s%s", warn, strings.Join(flags, " "), reset)
 		}
 		fmt.Fprintln(&out)
+		// The agents living in this den, which is the thing a worktree-shaped
+		// list could never show: two agents here used to be one row.
+		for _, resident := range view.Residents {
+			pet := identity.For(resident.Session)
+			tone, note := hue(pet.Color), ""
+			if resident.Stale(now) {
+				tone, note = dim, dim+" · stale"+reset
+			} else if resident.JustArrived(now) {
+				note = dim + " · just arrived" + reset
+			}
+			fmt.Fprintf(&out, "       %s%s %s%s  %s%s%s%s\n",
+				tone, pad(pet.Prefix+"•ᴗ•"+pet.Suffix, 9), pad(pet.Name, 8), reset,
+				dim, pad(truncate(resident.Label(), 36), 38), since(resident.Seen, now), note)
+		}
 	}
 
 	if hidden > 0 {
