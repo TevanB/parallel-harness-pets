@@ -99,9 +99,11 @@ func Party(views []View, settings config.Config, showAll bool, now time.Time) st
 		species := pad(view.Pet.Label(), widestSpecies)
 		branch := pad(truncate(view.Branch, settings.Display.BranchLabelMax), widestBranch)
 
+		// Tighter than the status line's "@ XYZ": this is a column to scan down,
+		// so it loses the space and keeps the marker.
 		home := ""
-		if place := view.Home(); place != "" {
-			home = dim + pad(place, 4) + reset
+		if code := view.Place.Code; code != "" {
+			home = dim + pad("@"+code, 5) + reset
 		}
 		fmt.Fprintf(&out, "  %s%s %s%s%s %s%-5s%s %s%s%s  %s",
 			home,

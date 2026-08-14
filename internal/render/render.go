@@ -43,10 +43,14 @@ type View struct {
 	HasState  bool
 }
 
-// Home is the den's compact form: the flight code alone, three ASCII cells
-// whatever the city. The status line has no room for the drawing.
+// Home is the den's compact form: the flight code, marked with an "at" so a
+// reader who has never seen this tool still parses three capitals as a place
+// rather than as an abbreviation they are expected to know.
 func (v View) Home() string {
-	return v.Place.Code
+	if v.Place.Code == "" {
+		return ""
+	}
+	return "@ " + v.Place.Code
 }
 
 func hue(color int) string {
@@ -152,15 +156,16 @@ func truncate(text string, max int) string {
 // Statusline is the one-line form Claude Code refreshes every second.
 func Statusline(v View, settings config.Config) string {
 	color := hue(v.Pet.Color)
-	var parts []string
-	// The den is context and the pet is what you rolled, so the city stays dim
-	// and never competes with the creature for attention.
+	// The pet leads because it is the subject; the den trails it as context and
+	// stays dim so it never competes with the creature for attention.
+	parts := []string{
+		color + v.Body() + reset,
+		color + v.Pet.Name + reset,
+	}
 	if home := v.Home(); home != "" {
 		parts = append(parts, dim+home+reset)
 	}
 	parts = append(parts,
-		color+v.Body()+reset,
-		color+v.Pet.Name+reset,
 		dim+"·"+reset,
 		label+truncate(v.Branch, settings.Display.BranchLabelMax)+reset,
 		v.hearts(),
