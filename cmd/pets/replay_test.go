@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"os"
 	"path/filepath"
 	"strings"
@@ -29,13 +30,23 @@ func worktree(t *testing.T, branch string) string {
 // fixture returns a captured payload with its recorded worktree path swapped
 // for a real one. Only the path is rewritten: the shape, and every field the
 // code does not read, stay exactly as the harness sent them.
+//
+// The replacement is escaped as a JSON string rather than spliced in raw. A
+// Windows temp directory is C:\Users\..., and every backslash in it is an
+// invalid JSON escape, so splicing produces a payload that silently fails to
+// parse and a test that reports every field missing.
 func fixture(t *testing.T, name, root string) string {
 	t.Helper()
 	raw, err := os.ReadFile(filepath.Join("testdata", name))
 	if err != nil {
 		t.Fatal(err)
 	}
-	return strings.ReplaceAll(string(raw), "/home/user/code/demo/.worktrees/feat-example", root)
+	encoded, err := json.Marshal(root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	quoted := string(encoded[1 : len(encoded)-1])
+	return strings.ReplaceAll(string(raw), "/home/user/code/demo/.worktrees/feat-example", quoted)
 }
 
 // Replaying real captured bytes, rather than a payload we invented, is the only
