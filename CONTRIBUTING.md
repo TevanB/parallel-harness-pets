@@ -42,6 +42,26 @@ echo "clippy=$(cargo clippy --message-format=short 2>&1 | grep -c '^warning')"
 Signals are user configuration rather than part of the tool, so there is nothing
 to submit unless you want one documented in the README as an example.
 
+## Hook fixtures
+
+`cmd/pets/testdata/` holds payloads captured from a real session, not written by
+hand. That distinction is the point: a hand-written fixture encodes what its
+author believed the harness sends, so a test built on one agrees with the
+author's mistake. This project shipped that exact bug once, and every test passed
+while the code read escaped JSON source instead of text.
+
+To refresh one, point the hook or status line at a script that tees stdin before
+calling `pets`, then **sanitise it before committing**. A real payload carries
+your username in several absolute paths, your repository owner, the session name
+and `cost.total_cost_usd`. Replace them with the `example/demo` and
+`/home/user/...` placeholders already used in the existing fixtures, and keep
+the worktree path exactly as it is: the tests rewrite that one field and nothing
+else, so the shape stays as the harness sent it.
+
+Assert what the hook *wrote*, not what it returned. Its product is a cache entry
+with an expiry that a later render reads, so a function can decode perfectly and
+still record the wrong verdict.
+
 ## Working on the code
 
 ```sh

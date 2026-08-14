@@ -1,0 +1,25 @@
+{
+  "session_id": "00000000-0000-0000-0000-000000000000",
+  "transcript_path": "/home/user/.claude/projects/demo/transcript.jsonl",
+  "cwd": "/home/user/code/demo/.worktrees/feat-example",
+  "prompt_id": "11111111-1111-1111-1111-111111111111",
+  "permission_mode": "bypassPermissions",
+  "effort": {
+    "level": "xhigh"
+  },
+  "hook_event_name": "PostToolUse",
+  "tool_name": "Bash",
+  "tool_input": {
+    "command": "go test ./...",
+    "description": "Run the test suite"
+  },
+  "tool_response": {
+    "stdout": "ok  \tgithub.com/example/demo\t0.204s\n",
+    "stderr": "",
+    "interrupted": false,
+    "isImage": false,
+    "noOutputExpected": false
+  },
+  "tool_use_id": "toolu_00000000000000000000000000",
+  "duration_ms": 1958
+}

@@ -390,16 +390,32 @@ func probe(root string, settings config.Config) {
 }
 
 func recordCommand() {
-	payload := readPayload()
+	info, err := os.Stdin.Stat()
+	if err != nil || info.Mode()&os.ModeCharDevice != 0 {
+		return
+	}
+	recordFrom(os.Stdin, config.StateDir(), time.Now())
+}
+
+// recordFrom is recordCommand's testable core.
+//
+// It takes the bytes a harness actually pipes in and returns the verdict it
+// wrote, so a test can assert what landed in the cache rather than only what
+// the parser returned. The hook's product is a file with an expiry, and a
+// function that decodes correctly while writing the wrong thing would satisfy
+// any test that only checks a return value.
+func recordFrom(source io.Reader, cacheDir string, now time.Time) (string, bool) {
+	payload := parsePayload(source, stdinDeadline)
 	repo, found := gitrepo.Locate(payload.directory())
 	if !found {
-		return
+		return "", false
 	}
 	result, ok := verdict.Of(payload.ToolInput.Command, responseText(payload.ToolResponse))
 	if !ok {
-		return
+		return "", false
 	}
-	state.WriteTests(config.StateDir(), repo.Key(), result, time.Now())
+	state.WriteTests(cacheDir, repo.Key(), result, now)
+	return result, true
 }
 
 // responseText decodes what a runner actually printed.
