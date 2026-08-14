@@ -221,6 +221,31 @@ func All(stateDir string, now time.Time) []Record {
 	return found
 }
 
+// Representative picks the agent that should stand for a den.
+//
+// A den always shows a creature, but when somebody is actually working there
+// the creature ought to be theirs rather than one derived from the branch. A
+// live agent always outranks a silent one, however recently the silent one
+// spoke, because a den's face should belong to whoever is still in it.
+//
+// It does not assume the caller sorted anything, so the rule survives a change
+// to how the register is ordered.
+func Representative(records []Record, now time.Time) (Record, bool) {
+	var best Record
+	found := false
+	for _, record := range records {
+		switch {
+		case !found:
+			best, found = record, true
+		case best.Stale(now) && !record.Stale(now):
+			best = record
+		case best.Stale(now) == record.Stale(now) && record.Seen.After(best.Seen):
+			best = record
+		}
+	}
+	return best, found
+}
+
 // InDen returns the agents working in one den, most recently seen first.
 func InDen(stateDir, den string, now time.Time) []Record {
 	var found []Record

@@ -343,7 +343,14 @@ func cardCommand(args []string) {
 	}
 	// The card is a den's readout, so it lists everyone in the den rather than
 	// guessing at a single pet it has no session to identify.
-	view.Residents = agents.InDen(config.StateDir(), view.Den, time.Now())
+	now := time.Now()
+	view.Residents = agents.InDen(config.StateDir(), view.Den, now)
+	// The card runs from a shell with no session of its own, so without this it
+	// shows a branch-derived creature nobody in the den is actually using.
+	if representative, occupied := agents.Representative(view.Residents, now); occupied {
+		view.Pet = identity.For(representative.Session)
+		view.Session = representative.Session
+	}
 	fmt.Print(render.Card(view, settings))
 	fmt.Print(updateNotice(settings))
 }

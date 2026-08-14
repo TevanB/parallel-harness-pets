@@ -104,6 +104,36 @@ func TestLocationDoesNotDecideExistence(t *testing.T) {
 	}
 }
 
+// A den always shows a creature, and when somebody is working there it must be
+// theirs. The ordering rule is the interesting part: presence beats recency.
+func TestRepresentativePrefersALiveAgent(t *testing.T) {
+	now := time.Now()
+	live := Record{Session: "live", Seen: now.Add(-2 * time.Minute)}
+	silent := Record{Session: "silent", Seen: now.Add(-1 * time.Minute)}
+
+	if _, found := Representative(nil, now); found {
+		t.Error("an empty den named a representative")
+	}
+	// Deliberately unsorted, and the stale one spoke more recently, so a naive
+	// "take the newest" would pick the wrong agent.
+	stale := Record{Session: "stale", Seen: now.Add(-StaleAfter - time.Minute)}
+	chosen, found := Representative([]Record{stale, live}, now)
+	if !found || chosen.Session != "live" {
+		t.Errorf("a stale agent outranked a live one: %q", chosen.Session)
+	}
+	// Among agents in the same condition, the most recent wins.
+	chosen, _ = Representative([]Record{live, silent}, now)
+	if chosen.Session != "silent" {
+		t.Errorf("among live agents the older one won: %q", chosen.Session)
+	}
+	// A den where everyone has gone quiet still gets a face.
+	older := Record{Session: "older", Seen: now.Add(-StaleAfter - time.Hour)}
+	chosen, found = Representative([]Record{older, stale}, now)
+	if !found || chosen.Session != "stale" {
+		t.Errorf("an all-stale den picked %q", chosen.Session)
+	}
+}
+
 // Label is what a human reads in a list, so it must never come back blank.
 func TestLabelFallsBackToTheSessionID(t *testing.T) {
 	named := Record{Session: "aaaa-1111-bbbb", Name: "fix the flaky auth test"}

@@ -257,16 +257,19 @@ func Residents(v View, now time.Time) string {
 	fmt.Fprintf(&out, "\n  %s%d agent%s in this den%s\n\n",
 		dim, living, map[bool]string{true: "", false: "s"}[living == 1], reset)
 
+	// Mood belongs to the worktree, so every agent in a den wears the same face.
+	// A fixed cheerful one here would be a readout that reports nothing.
+	face := v.face()
 	width := 0
 	for _, resident := range v.Residents {
 		pet := identity.For(resident.Session)
-		if size := displayWidth(pet.Prefix + "•ᴗ•" + pet.Suffix); size > width {
+		if size := displayWidth(pet.Prefix + face + pet.Suffix); size > width {
 			width = size
 		}
 	}
 	for _, resident := range v.Residents {
 		pet := identity.For(resident.Session)
-		body := pet.Prefix + "•ᴗ•" + pet.Suffix
+		body := pet.Prefix + face + pet.Suffix
 		marker, tone := "  ", hue(pet.Color)
 		if resident.Session == v.Session {
 			marker = dim + "→ " + reset

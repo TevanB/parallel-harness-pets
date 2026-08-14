@@ -57,11 +57,18 @@ func partyCommand(args []string) {
 		}
 		tests := state.ReadTests(cacheDir, repo.Key(), now)
 		denKey := identity.DenKey(repo.Project(), repo.Worktree())
+		// A den always shows a creature, but it belongs to whoever is working
+		// there when anyone is. Only an empty den falls back to the branch.
+		residents := byDen[denKey]
+		petKey := repo.Branch
+		if representative, occupied := agents.Representative(residents, now); occupied {
+			petKey = representative.Session
+		}
 		views = append(views, render.View{
-			Pet:       identity.For(repo.Branch),
+			Pet:       identity.For(petKey),
 			Place:     identity.PlaceFor(repo.Project(), repo.Worktree()),
 			Den:       denKey,
-			Residents: byDen[denKey],
+			Residents: residents,
 			Branch:    repo.Branch,
 			Root:      repo.Root,
 			State:     current,

@@ -127,7 +127,7 @@ func Party(views []View, settings config.Config, showAll bool, now time.Time) st
 				note = dim + " · just arrived" + reset
 			}
 			fmt.Fprintf(&out, "       %s%s %s%s  %s%s%s%s\n",
-				tone, pad(pet.Prefix+"•ᴗ•"+pet.Suffix, 9), pad(pet.Name, 8), reset,
+				tone, pad(pet.Prefix+view.face()+pet.Suffix, 9), pad(pet.Name, 8), reset,
 				dim, pad(truncate(resident.Label(), 36), 38), since(resident.Seen, now), note)
 		}
 	}
