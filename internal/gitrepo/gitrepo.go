@@ -22,6 +22,11 @@ type Repo struct {
 // Locate walks up from dir looking for .git, honouring the gitdir: pointer file
 // that a linked worktree uses in place of a directory.
 func Locate(dir string) (Repo, bool) {
+	if !filepath.IsAbs(dir) {
+		if abs, err := filepath.Abs(dir); err == nil {
+			dir = abs
+		}
+	}
 	for dir != "" && dir != string(filepath.Separator) {
 		info, err := os.Stat(filepath.Join(dir, ".git"))
 		switch {

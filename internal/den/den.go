@@ -16,6 +16,7 @@ import (
 	"time"
 
 	"github.com/TevvvB/parallel-harness-pets/internal/identity"
+	"github.com/TevvvB/parallel-harness-pets/internal/lock"
 )
 
 const Version = 1
@@ -60,19 +61,11 @@ func Record(dir string, pet identity.Pet, branch string, now time.Time) (bool, e
 	if err := os.MkdirAll(dir, 0o755); err != nil {
 		return false, err
 	}
-	lock := filepath.Join(dir, "den.lock")
-	acquired := false
-	for attempt := 0; attempt < 50; attempt++ {
-		if os.Mkdir(lock, 0o755) == nil {
-			acquired = true
-			break
-		}
-		time.Sleep(20 * time.Millisecond)
-	}
-	if !acquired {
+	lockPath := filepath.Join(dir, "den.lock")
+	if !lock.WaitAcquire(lockPath, 2*time.Minute) {
 		return false, nil
 	}
-	defer os.Remove(lock)
+	defer os.Remove(lockPath)
 
 	collection := Load(dir)
 	key := pet.Key()
