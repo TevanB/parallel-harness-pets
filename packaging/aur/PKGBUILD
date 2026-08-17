@@ -1,0 +1,24 @@
+# Maintainer: TevvvB <45053368+TevvvB@users.noreply.github.com>
+pkgname=parallel-harness-pets-bin
+_pkgname=parallel-harness-pets
+pkgver=0.2.0
+pkgrel=1
+pkgdesc="A creature for every coding agent, in a den for every git worktree"
+arch=('x86_64' 'aarch64')
+url="https://github.com/TevvvB/parallel-harness-pets"
+license=('MIT')
+provides=('parallel-harness-pets' 'pets')
+conflicts=('parallel-harness-pets' 'pets')
+options=('!strip')
+
+source_x86_64=("${_pkgname}_${pkgver}_linux_amd64.tar.gz::${url}/releases/download/v${pkgver}/${_pkgname}_${pkgver}_linux_amd64.tar.gz")
+source_aarch64=("${_pkgname}_${pkgver}_linux_arm64.tar.gz::${url}/releases/download/v${pkgver}/${_pkgname}_${pkgver}_linux_arm64.tar.gz")
+
+sha256sums_x86_64=('5360fe6b5b3a125903a733b4340d027b7cdf2c6fccbd7b5ab2af103f009dca32')
+sha256sums_aarch64=('8a2be578a629eea378d5342fb62477c7239620b15270a70d351802b31e7069ba')
+
+package() {
+    install -Dm755 "${srcdir}/pets" "${pkgdir}/usr/bin/pets"
+    install -Dm644 "${srcdir}/LICENSE" "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+    install -Dm644 "${srcdir}/README.md" "${pkgdir}/usr/share/doc/${pkgname}/README.md"
+}
