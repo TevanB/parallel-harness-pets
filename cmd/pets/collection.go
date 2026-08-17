@@ -109,7 +109,9 @@ func hatchCommand() {
 	if _, err := os.Stat(marker); err == nil {
 		return
 	}
-	os.WriteFile(marker, []byte(time.Now().Format(time.RFC3339)+"\n"), 0o644)
+	if err := os.WriteFile(marker, []byte(time.Now().Format(time.RFC3339)+"\n"), 0o644); err != nil {
+		return
+	}
 
 	// Recording happens before rendering so the position shown is the real one.
 	// The hatch itself is free, but the den entry has to be earned, or a

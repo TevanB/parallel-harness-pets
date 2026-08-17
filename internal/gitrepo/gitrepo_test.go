@@ -39,6 +39,24 @@ func TestLocateWalksUpFromASubdirectory(t *testing.T) {
 	}
 }
 
+// Relative paths have to be resolved against the current directory before the
+// walk starts, otherwise a path like "../b" from inside "repo/a" stops at the
+// current directory and misses the repository one level up.
+func TestLocateWalksUpFromRelativePath(t *testing.T) {
+	root := t.TempDir()
+	gitDir := filepath.Join(root, ".git")
+	os.MkdirAll(gitDir, 0o755)
+	os.WriteFile(filepath.Join(gitDir, "HEAD"), []byte("ref: refs/heads/main\n"), 0o644)
+	nested := filepath.Join(root, "a", "b")
+	os.MkdirAll(nested, 0o755)
+
+	t.Chdir(filepath.Join(root, "a"))
+	repo, found := Locate("../b")
+	if !found || repo.Root != root {
+		t.Fatalf("Locate(../b) from %s = %+v/%v, want root %q", filepath.Join(root, "a"), repo, found, root)
+	}
+}
+
 // A linked worktree has a .git file pointing elsewhere, not a .git directory.
 // This is the whole point of the project, so it had better work.
 func TestLocateLinkedWorktree(t *testing.T) {

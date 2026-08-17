@@ -15,6 +15,7 @@ import (
 	"github.com/TevvvB/parallel-harness-pets/internal/config"
 	"github.com/TevvvB/parallel-harness-pets/internal/gitrepo"
 	"github.com/TevvvB/parallel-harness-pets/internal/identity"
+	"github.com/TevvvB/parallel-harness-pets/internal/lock"
 	"github.com/TevvvB/parallel-harness-pets/internal/render"
 	"github.com/TevvvB/parallel-harness-pets/internal/score"
 	"github.com/TevvvB/parallel-harness-pets/internal/signal"
@@ -264,7 +265,7 @@ func refreshInBackground(root string) {
 		return
 	}
 	command := exec.Command(executable, "probe", root)
-	command.Stdout, command.Stderr = nil, nil
+	command.Stdout, command.Stderr = io.Discard, io.Discard
 	if command.Start() == nil {
 		go command.Wait()
 	}
@@ -378,11 +379,11 @@ func probe(root string, settings config.Config) {
 	if err := os.MkdirAll(cacheDir, 0o755); err != nil {
 		return
 	}
-	lock := filepath.Join(cacheDir, repo.Key()+".lock")
-	if os.Mkdir(lock, 0o755) != nil {
+	lockPath := filepath.Join(cacheDir, repo.Key()+".lock")
+	if !lock.TryAcquire(lockPath, 5*time.Minute) {
 		return
 	}
-	defer os.Remove(lock)
+	defer os.Remove(lockPath)
 	state.Write(cacheDir, repo.Key(), signal.Collect(repo, settings, time.Now()))
 	// A branch earns its den entry on its first commit, which may be long after
 	// the hatch, so the probe is where that gets noticed.
@@ -414,7 +415,9 @@ func recordFrom(source io.Reader, cacheDir string, now time.Time) (string, bool)
 	if !ok {
 		return "", false
 	}
-	state.WriteTests(cacheDir, repo.Key(), result, now)
+	if err := state.WriteTests(cacheDir, repo.Key(), result, now); err != nil {
+		return "", false
+	}
 	return result, true
 }
 
