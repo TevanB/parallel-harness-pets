@@ -7,6 +7,13 @@
 </p>
 
 <p align="center">
+  <b>English</b> ·
+  <a href="README.ja.md">日本語</a> ·
+  <a href="README.ko.md">한국어</a> ·
+  <a href="README.zh-Hans.md">简体中文</a>
+</p>
+
+<p align="center">
   Most terminal pets belong to <i>you</i>: one creature, nurtured over time. This one belongs
   to an <b>agent</b>. Every worktree is a den with a name, every agent working in it gets its
   own creature, and its mood tracks how tidy that worktree is. Six agents means six creatures
