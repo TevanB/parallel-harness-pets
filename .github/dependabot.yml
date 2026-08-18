@@ -1,0 +1,19 @@
+version: 2
+updates:
+  # Actions are pinned to commit SHAs, which is what makes this necessary rather
+  # than optional: a pinned action never moves, so nothing updates it but this.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    commit-message:
+      # `chore:` is filtered out of release notes by .goreleaser.yaml, which is
+      # where a dependency bump belongs — nowhere.
+      prefix: "chore"
+
+  - package-ecosystem: gomod
+    directory: /
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: "chore"
