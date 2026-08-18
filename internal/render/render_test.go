@@ -198,3 +198,44 @@ func creatureRows(rendered string) int {
 	}
 	return rows
 }
+
+// The places grid centres codes by arithmetic and wraps at a fixed width, both
+// of which are easy to get subtly wrong and invisible until someone squints at
+// a terminal. It also must not emit trailing whitespace.
+func TestPlacesGridAlignsAndWraps(t *testing.T) {
+	roster := identity.AllPlaces()
+	if len(roster) < 6 {
+		t.Skip("roster too small to exercise wrapping")
+	}
+	rendered := stripANSI(Places(roster[:6]))
+	lines := strings.Split(strings.TrimRight(rendered, "\n"), "\n")
+
+	for i, line := range lines {
+		if strings.HasSuffix(line, " ") {
+			t.Errorf("line %d has trailing whitespace: %q", i, line)
+		}
+	}
+	// Six places at four per row means two rows, and each row is three drawing
+	// lines plus a code line.
+	codeLines := 0
+	for _, line := range lines {
+		if strings.Contains(line, roster[0].Code) || strings.Contains(line, roster[4].Code) {
+			codeLines++
+		}
+	}
+	if codeLines != 2 {
+		t.Errorf("expected 2 code rows for 6 places at 4 per row, found %d", codeLines)
+	}
+	// A code must sit under its own drawing, not at the left margin.
+	for _, line := range lines {
+		if strings.Contains(line, roster[0].Code) {
+			if strings.HasPrefix(strings.TrimLeft(line, " "), roster[0].Code) &&
+				len(line)-len(strings.TrimLeft(line, " ")) < 3 {
+				t.Errorf("code not centred under its drawing: %q", line)
+			}
+		}
+	}
+	if Places(nil) != "" {
+		t.Error("an empty roster still rendered a grid")
+	}
+}

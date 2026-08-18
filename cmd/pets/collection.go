@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
 	"time"
 
 	"github.com/TevvvB/parallel-harness-pets/internal/agents"
@@ -16,6 +17,7 @@ import (
 	"github.com/TevvvB/parallel-harness-pets/internal/score"
 	"github.com/TevvvB/parallel-harness-pets/internal/signal"
 	"github.com/TevvvB/parallel-harness-pets/internal/state"
+	"github.com/TevvvB/parallel-harness-pets/internal/visits"
 )
 
 // updateNotice checks at most once a day, and only ever from here: the three
@@ -30,7 +32,24 @@ func updateNotice(settings config.Config) string {
 }
 
 func denCommand() {
-	fmt.Print(render.Den(den.Load(config.StateDir())))
+	cacheDir := config.StateDir()
+	// Cities are collected the same way creatures are, so the den needs both
+	// halves. Which places have been worked in comes out of the visit log,
+	// deduped and resolved back through the same hash that assigned them.
+	seen := map[string]bool{}
+	var visited []identity.Place
+	for _, key := range visits.Dens(cacheDir) {
+		place := identity.PlaceForKey(key)
+		if seen[place.Code] {
+			continue
+		}
+		seen[place.Code] = true
+		visited = append(visited, place)
+	}
+	sort.Slice(visited, func(first, second int) bool {
+		return visited[first].Code < visited[second].Code
+	})
+	fmt.Print(render.Den(den.Load(cacheDir), visited))
 	fmt.Print(updateNotice(config.Load()))
 }
 

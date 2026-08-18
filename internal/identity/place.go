@@ -24,9 +24,12 @@ type Place struct {
 	Art [3]string
 }
 
-// ArtWidth is the column budget every city drawing shares, so a den lays out in
-// a grid without measuring anything.
-const ArtWidth = 10
+// ArtWidth and ArtRows are the fixed dimensions every city drawing shares, so a
+// den lays out in a grid without measuring anything.
+const (
+	ArtWidth = 10
+	ArtRows  = 3
+)
 
 var places = []Place{
 	{"SFO", "San Francisco", [3]string{
@@ -105,7 +108,17 @@ var places = []Place{
 // `pets card` has no payload, and including it made one worktree resolve to two
 // different cities depending on which surface asked.
 func PlaceFor(repo, worktree string) Place {
-	return places[Hash(DenKey(repo, worktree))%len(places)]
+	return PlaceForKey(DenKey(repo, worktree))
+}
+
+// PlaceForKey resolves a place from a den key that was stored earlier.
+//
+// The visit log records den keys rather than city codes, because a key is what
+// identifies a worktree and a code is only how it is displayed. Reading a place
+// back out therefore needs this, and keeping it beside PlaceFor is what stops
+// the two drifting into disagreeing about the same worktree.
+func PlaceForKey(den string) Place {
+	return places[Hash(den)%len(places)]
 }
 
 // DenKey names a den for storage and grouping. One string, so agents can be
@@ -138,6 +151,9 @@ func ValidatePlaces() error {
 			return fmt.Errorf("duplicate place %q", place.Code)
 		}
 		seen[place.Code] = true
+		if len(place.Art) != ArtRows {
+			return fmt.Errorf("place %q: art must be %d rows", place.Code, ArtRows)
+		}
 		for row, line := range place.Art {
 			// Byte length is the column count only while the art stays ASCII,
 			// which is also what keeps it aligned in every terminal.

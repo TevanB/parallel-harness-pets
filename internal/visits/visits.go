@@ -120,6 +120,34 @@ func read(file string) (Visit, error) {
 	return visit, nil
 }
 
+// Dens returns every den that has ever been visited, so the collection can ask
+// which places have been worked in rather than only who came to one of them.
+//
+// The filename carries a hash of the den key rather than the key itself, so the
+// keys have to be read out of the files. Duplicates are expected: one file per
+// den-and-session pair means a den with four visitors has four files.
+func Dens(stateDir string) []string {
+	entries, err := os.ReadDir(dir(stateDir))
+	if err != nil {
+		return nil
+	}
+	seen := map[string]bool{}
+	var found []string
+	for _, entry := range entries {
+		if !strings.HasSuffix(entry.Name(), ".visit") {
+			continue
+		}
+		visit, err := read(filepath.Join(dir(stateDir), entry.Name()))
+		if err != nil || visit.Den == "" || seen[visit.Den] {
+			continue
+		}
+		seen[visit.Den] = true
+		found = append(found, visit.Den)
+	}
+	sort.Strings(found)
+	return found
+}
+
 // ForDen returns everyone who has ever worked in a den, first arrival first, so
 // the list reads as a history rather than as a leaderboard.
 func ForDen(stateDir, den string) []Visit {
