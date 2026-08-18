@@ -17,7 +17,7 @@ is not automated.
    cd parallel-harness-pets-bin
    cp /path/to/claude-buddy/packaging/aur/{PKGBUILD,.SRCINFO} .
    git add PKGBUILD .SRCINFO
-   git commit -m "Initial import: parallel-harness-pets-bin 0.2.0"
+   git commit -m "Initial import: parallel-harness-pets-bin 0.2.1"
    git push
    ```
 
