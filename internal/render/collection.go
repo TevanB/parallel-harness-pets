@@ -161,8 +161,63 @@ func Party(views []View, settings config.Config, showAll bool, now time.Time) st
 	return out.String()
 }
 
+// Places is the other half of the collection: which cities have been worked in.
+//
+// This is what identity.ArtWidth exists for. Every drawing is the same width, so
+// a grid needs no measuring, and the codes can be centred underneath by
+// arithmetic rather than by rendering and inspecting.
+func Places(visited []identity.Place) string {
+	if len(visited) == 0 {
+		return ""
+	}
+	const perRow = 4
+	const gap = 4
+	var out strings.Builder
+	fmt.Fprintf(&out, "\n  %splaces worked in%s\n\n", dim, reset)
+	for start := 0; start < len(visited); start += perRow {
+		end := start + perRow
+		if end > len(visited) {
+			end = len(visited)
+		}
+		row := visited[start:end]
+		for line := 0; line < identity.ArtRows; line++ {
+			out.WriteString("  ")
+			for column, place := range row {
+				if column > 0 {
+					out.WriteString(strings.Repeat(" ", gap))
+				}
+				drawing := place.Art[line]
+				if column == len(row)-1 {
+					// The drawings are padded to ArtWidth, which is what makes the
+					// grid line up, but on the last column that padding is just
+					// trailing whitespace on the line.
+					drawing = strings.TrimRight(drawing, " ")
+				}
+				fmt.Fprintf(&out, "%s%s%s", dim, drawing, reset)
+			}
+			out.WriteString("\n")
+		}
+		out.WriteString("  ")
+		for column, place := range row {
+			if column > 0 {
+				out.WriteString(strings.Repeat(" ", gap))
+			}
+			// Centred by arithmetic, which only works because every drawing is
+			// exactly ArtWidth wide. The right pad is dropped on the last column
+			// so no line carries trailing whitespace.
+			left := (identity.ArtWidth - len(place.Code)) / 2
+			fmt.Fprintf(&out, "%s%s%s%s", strings.Repeat(" ", left), label, place.Code, reset)
+			if column < len(row)-1 {
+				fmt.Fprint(&out, strings.Repeat(" ", identity.ArtWidth-len(place.Code)-left))
+			}
+		}
+		out.WriteString("\n\n")
+	}
+	return out.String()
+}
+
 // Den is the collection view: what you have hatched, and what is still missing.
-func Den(collection den.Den) string {
+func Den(collection den.Den, visited []identity.Place) string {
 	var out strings.Builder
 	progress := collection.Completion()
 	have, total := 0, 0
@@ -171,8 +226,9 @@ func Den(collection den.Den) string {
 		total += band.Total
 	}
 
-	fmt.Fprintf(&out, "\n  %spets den%s%s%d/%d species · %d shiny%s\n\n",
-		label, reset, strings.Repeat(" ", 22), have, total, collection.ShinyCount(), reset)
+	fmt.Fprintf(&out, "\n  %spets den%s%s%d/%d species · %d shiny · %d/%d places%s\n\n",
+		label, reset, strings.Repeat(" ", 14), have, total, collection.ShinyCount(),
+		len(visited), len(identity.AllPlaces()), reset)
 
 	const width = 20
 	for _, band := range progress {
@@ -186,6 +242,8 @@ func Den(collection den.Den) string {
 			dim, strings.Repeat("░", width-filled), reset,
 			dim, band.Have, band.Total, reset)
 	}
+
+	out.WriteString(Places(visited))
 
 	if latest := collection.Latest(1); len(latest) > 0 {
 		entry := latest[0]

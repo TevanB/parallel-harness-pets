@@ -54,3 +54,29 @@ func TestFirstArrivalSurvivesLaterVisits(t *testing.T) {
 		t.Error("last seen did not advance on a return visit")
 	}
 }
+
+// The collection needs to ask which places have been worked in, which means
+// reading distinct den keys back out of a directory of per-session files.
+func TestDensListsEachDenOnce(t *testing.T) {
+	dir := t.TempDir()
+	now := time.Now()
+	for _, v := range [][2]string{
+		{"demo#alpha", "one"}, {"demo#alpha", "two"}, {"demo#alpha", "three"},
+		{"demo#beta", "one"}, {"other#alpha", "one"},
+	} {
+		if err := Record(dir, v[0], v[1], now); err != nil {
+			t.Fatal(err)
+		}
+	}
+	dens := Dens(dir)
+	if len(dens) != 3 {
+		t.Fatalf("got %d dens %v, want 3 distinct", len(dens), dens)
+	}
+	// Sorted, so the caller gets a stable order between runs.
+	if dens[0] != "demo#alpha" || dens[1] != "demo#beta" || dens[2] != "other#alpha" {
+		t.Errorf("unsorted or wrong: %v", dens)
+	}
+	if empty := Dens(t.TempDir()); len(empty) != 0 {
+		t.Errorf("a fresh state dir reported %d dens", len(empty))
+	}
+}
