@@ -6,6 +6,13 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    groups:
+      # One PR for every action, because Dependabot proposes each `uses:` line
+      # separately and that is broken two ways here: codeql-action/init and
+      # /analyze fail unless they run the identical version, and separate PRs
+      # touching the same workflow file conflict as soon as one of them merges.
+      actions:
+        patterns: ["*"]
     commit-message:
       # `chore:` is filtered out of release notes by .goreleaser.yaml, which is
       # where a dependency bump belongs — nowhere.
