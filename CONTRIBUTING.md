@@ -93,3 +93,8 @@ executes once a second in every open session, so it reads two small files and
 nothing else. The expensive work happens in `pets probe`, backgrounded and
 throttled. Update checks run only from `card`, `party` and `den`, which a person
 types.
+
+## Conduct
+
+By taking part you agree to the [Code of Conduct](CODE_OF_CONDUCT.md). It is the
+Contributor Covenant, unmodified.
