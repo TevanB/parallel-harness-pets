@@ -3,3 +3,4 @@ cache/
 .DS_Store
 .lavish/
 dist/
+/pets
