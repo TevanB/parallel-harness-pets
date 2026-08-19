@@ -95,10 +95,14 @@ easier to keep straight, a star helps other people find it.
 
 | Installed with | Update with |
 |---|---|
-| Homebrew | `brew upgrade parallel-harness-pets` |
+| Homebrew | `brew update && brew upgrade parallel-harness-pets` |
 | The install script | re-run it, it replaces the binary in place |
 | Go | `go install github.com/TevvvB/parallel-harness-pets/cmd/pets@latest` |
 | A release archive | download the new one |
+
+`brew update` first is not optional. Without it Homebrew reads its cached copy of the
+tap and answers *"the latest version is already installed"* while installing the old
+one, which is worse than an error because nothing looks wrong.
 
 Homebrew refuses to upgrade a cask from a tap it does not trust, so the first
 upgrade may stop with *"Refusing to load cask ... from untrusted tap"*. Trust it
