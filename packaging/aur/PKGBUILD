@@ -1,7 +1,7 @@
 # Maintainer: TevvvB <45053368+TevvvB@users.noreply.github.com>
 pkgname=parallel-harness-pets-bin
 _pkgname=parallel-harness-pets
-pkgver=0.2.2
+pkgver=0.2.3
 pkgrel=1
 pkgdesc="A creature for every coding agent, in a den for every git worktree"
 arch=('x86_64' 'aarch64')
@@ -14,8 +14,8 @@ options=('!strip')
 source_x86_64=("${_pkgname}_${pkgver}_linux_amd64.tar.gz::${url}/releases/download/v${pkgver}/${_pkgname}_${pkgver}_linux_amd64.tar.gz")
 source_aarch64=("${_pkgname}_${pkgver}_linux_arm64.tar.gz::${url}/releases/download/v${pkgver}/${_pkgname}_${pkgver}_linux_arm64.tar.gz")
 
-sha256sums_x86_64=('70511234c65bf41788afa50b451403f6060cc6b501b1324a4a3b8bc73f333486')
-sha256sums_aarch64=('81d8ba433737f24245a68ebb5ed7029785f3b2af0c90520910491c48ebc399bc')
+sha256sums_x86_64=('787e950bfc9fc2044e6fbdaddc80df30dd3a3ef3f2dc97b04184d468187be42f')
+sha256sums_aarch64=('d3a7b609c6d51de495ce0fe86ba7b60afe60d69b3ba089215911bb1cf5e796a9')
 
 package() {
     install -Dm755 "${srcdir}/pets" "${pkgdir}/usr/bin/pets"
