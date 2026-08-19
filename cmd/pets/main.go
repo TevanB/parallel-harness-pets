@@ -351,10 +351,10 @@ func cardCommand(args []string) {
 	now := time.Now()
 	view.Residents = agents.InDen(config.StateDir(), view.Den, now)
 	// The card runs from a shell with no session of its own, so without this it
-	// shows a branch-derived creature nobody in the den is actually using.
+	// shows a branch-derived creature nobody in the den is actually using. Session
+	// stays empty on purpose: it means "which agent is asking", and nobody is.
 	if representative, occupied := agents.Representative(view.Residents, now); occupied {
 		view.Pet = identity.For(representative.Session)
-		view.Session = representative.Session
 	}
 	view.Visitors = visits.ForDen(config.StateDir(), view.Den)
 	fmt.Print(render.Card(view, settings))
