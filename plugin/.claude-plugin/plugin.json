@@ -1,0 +1,19 @@
+{
+  "name": "pets",
+  "version": "0.2.2",
+  "description": "A creature for every agent session, in a den for every git worktree. Its mood tracks how tidy that worktree is, so several agents at once stay tellable apart at a glance.",
+  "author": {
+    "name": "TevvvB",
+    "url": "https://github.com/TevvvB"
+  },
+  "homepage": "https://github.com/TevvvB/parallel-harness-pets",
+  "repository": "https://github.com/TevvvB/parallel-harness-pets",
+  "license": "MIT",
+  "keywords": [
+    "statusline",
+    "worktree",
+    "parallel-agents",
+    "collection",
+    "fun"
+  ]
+}

@@ -48,6 +48,19 @@ brew install TevvvB/tap/parallel-harness-pets
 pets install
 ```
 
+**As a Claude Code plugin** - adds `/pets` and `/pets-setup`, so it is findable
+from inside Claude Code:
+
+```
+/plugin marketplace add TevvvB/parallel-harness-pets
+/plugin install pets@parallel-harness-pets
+/pets-setup
+```
+
+The plugin carries the two skills; `pets install` still owns the status line and
+hooks, which is what `/pets-setup` runs. You need the binary either way - a plugin
+carries configuration, not executables. See [plugin/README.md](plugin/README.md).
+
 **Windows** - grab an archive from
 [Releases](https://github.com/TevvvB/parallel-harness-pets/releases), put `pets`
 on your `PATH`, then run `pets install`.
