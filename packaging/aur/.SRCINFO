@@ -1,6 +1,6 @@
 pkgbase = parallel-harness-pets-bin
 	pkgdesc = A creature for every coding agent, in a den for every git worktree
-	pkgver = 0.2.2
+	pkgver = 0.2.3
 	pkgrel = 1
 	url = https://github.com/TevvvB/parallel-harness-pets
 	arch = x86_64
@@ -11,9 +11,9 @@ pkgbase = parallel-harness-pets-bin
 	conflicts = parallel-harness-pets
 	conflicts = pets
 	options = !strip
-	source_x86_64 = parallel-harness-pets_0.2.2_linux_amd64.tar.gz::https://github.com/TevvvB/parallel-harness-pets/releases/download/v0.2.2/parallel-harness-pets_0.2.2_linux_amd64.tar.gz
-	sha256sums_x86_64 = 70511234c65bf41788afa50b451403f6060cc6b501b1324a4a3b8bc73f333486
-	source_aarch64 = parallel-harness-pets_0.2.2_linux_arm64.tar.gz::https://github.com/TevvvB/parallel-harness-pets/releases/download/v0.2.2/parallel-harness-pets_0.2.2_linux_arm64.tar.gz
-	sha256sums_aarch64 = 81d8ba433737f24245a68ebb5ed7029785f3b2af0c90520910491c48ebc399bc
+	source_x86_64 = parallel-harness-pets_0.2.3_linux_amd64.tar.gz::https://github.com/TevvvB/parallel-harness-pets/releases/download/v0.2.3/parallel-harness-pets_0.2.3_linux_amd64.tar.gz
+	sha256sums_x86_64 = 787e950bfc9fc2044e6fbdaddc80df30dd3a3ef3f2dc97b04184d468187be42f
+	source_aarch64 = parallel-harness-pets_0.2.3_linux_arm64.tar.gz::https://github.com/TevvvB/parallel-harness-pets/releases/download/v0.2.3/parallel-harness-pets_0.2.3_linux_arm64.tar.gz
+	sha256sums_aarch64 = d3a7b609c6d51de495ce0fe86ba7b60afe60d69b3ba089215911bb1cf5e796a9
 
 pkgname = parallel-harness-pets-bin
