@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/TevvvB/parallel-harness-pets/internal/agents"
 	"github.com/TevvvB/parallel-harness-pets/internal/gitrepo"
 	"github.com/TevvvB/parallel-harness-pets/internal/state"
 )
@@ -110,4 +111,29 @@ func repoKey(t *testing.T, root string) string {
 		t.Fatalf("could not locate the worktree at %s", root)
 	}
 	return located.Key()
+}
+
+// A tool use that is not a test run still has to register the agent: for a harness with
+// hooks and no status line, this hook is the only per-turn signal that it is alive.
+func TestRecordFromRegistersTheAgentEvenWhenTheCommandIsNotATestRun(t *testing.T) {
+	root := worktree(t, "feat-example")
+	cache := t.TempDir()
+	now := time.Now()
+
+	// The captured payload with only the command swapped, so verdict.Of gives up on it.
+	payload := strings.ReplaceAll(fixture(t, "posttooluse.json", root), "go test ./...", "ls -la")
+	if _, ok := recordFrom(strings.NewReader(payload), cache, now); ok {
+		t.Fatal("`ls -la` was taken for a test verdict")
+	}
+
+	live := agents.All(cache, now)
+	if len(live) != 1 {
+		t.Fatalf("register holds %d agents, want the one that just used a tool", len(live))
+	}
+	if live[0].Session != "00000000-0000-0000-0000-000000000000" {
+		t.Errorf("registered session %q, not the one in the payload", live[0].Session)
+	}
+	if live[0].Den == "" {
+		t.Error("agent registered with no den, so no listing can group it")
+	}
 }
