@@ -192,6 +192,29 @@ func (p hookPayload) directory() string {
 	return working
 }
 
+// registerAgent pins an agent to its den and returns the den key; every payload path calls it, not only the status line.
+func registerAgent(cacheDir string, repo gitrepo.Repo, who agent, now time.Time) string {
+	worktree := who.Worktree
+	if worktree == "" {
+		worktree = repo.Worktree()
+	}
+	project := who.Repo
+	if project == "" {
+		project = repo.Project()
+	}
+	den := identity.DenKey(project, worktree)
+	agents.Touch(cacheDir, agents.Record{
+		Session: who.SessionID,
+		Den:     den,
+		Root:    repo.Root,
+		Branch:  repo.Branch,
+		Name:    who.Name,
+	}, now)
+	// Touch forgets an agent the moment it moves; the visit log is the half that does not.
+	visits.Record(cacheDir, den, who.SessionID, now)
+	return den
+}
+
 // build assembles a view from cache only. It never runs git, because this is the
 // path that executes once a second in every open session.
 func build(directory string, who agent, settings config.Config) (render.View, bool) {
@@ -215,34 +238,11 @@ func build(directory string, who agent, settings config.Config) (render.View, bo
 	if petKey == "" {
 		petKey = repo.Branch
 	}
-	// The harness names the den when it can. Git's own layout answers otherwise,
-	// and agrees with the harness: both call this worktree by the same name.
-	worktree := who.Worktree
-	if worktree == "" {
-		worktree = repo.Worktree()
-	}
-	project := who.Repo
-	if project == "" {
-		project = repo.Project()
-	}
-
-	den := identity.DenKey(project, worktree)
-	// Pin this agent to its den. Without this the pet is derived and then
-	// forgotten, so a den can never say who is in it.
-	agents.Touch(cacheDir, agents.Record{
-		Session: who.SessionID,
-		Den:     den,
-		Root:    repo.Root,
-		Branch:  repo.Branch,
-		Name:    who.Name,
-	}, now)
-	// A den's memory of who has worked in it. The register above forgets an
-	// agent the moment it moves; this is the half that does not.
-	visits.Record(cacheDir, den, who.SessionID, now)
+	den := registerAgent(cacheDir, repo, who, now)
 
 	view := render.View{
 		Pet:      identity.For(petKey),
-		Place:    identity.PlaceFor(project, worktree),
+		Place:    identity.PlaceForKey(den),
 		Den:      den,
 		Session:  who.SessionID,
 		Branch:   repo.Branch,
@@ -411,6 +411,8 @@ func recordFrom(source io.Reader, cacheDir string, now time.Time) (string, bool)
 	if !found {
 		return "", false
 	}
+	// Ahead of the verdict check, which bails on any command that is not a test run.
+	registerAgent(cacheDir, repo, payload.agent(), now)
 	result, ok := verdict.Of(payload.ToolInput.Command, responseText(payload.ToolResponse))
 	if !ok {
 		return "", false
@@ -455,6 +457,8 @@ func quipCommand() {
 	payload := readPayload()
 	repo, found := gitrepo.Locate(payload.directory())
 	if !found {
+		// As on the render path: an agent outside a worktree is still running.
+		agents.Beat(config.StateDir(), payload.SessionID, time.Now())
 		return
 	}
 	probe(repo.Root, settings)

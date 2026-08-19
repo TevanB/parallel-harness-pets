@@ -124,6 +124,8 @@ func hatchCommand() {
 	if err := os.MkdirAll(cacheDir, 0o755); err != nil {
 		return
 	}
+	// Ahead of the marker check, which returns for any worktree that hatched before.
+	registerAgent(cacheDir, repo, payload.agent(), time.Now())
 	marker := hatchMarker(cacheDir, repo.Key())
 	if _, err := os.Stat(marker); err == nil {
 		return
