@@ -118,6 +118,9 @@ func Party(views []View, settings config.Config, showAll bool, now time.Time) st
 		fmt.Fprintln(&out)
 		// The agents living in this den, which is the thing a worktree-shaped
 		// list could never show: two agents here used to be one row.
+		// A den with one resident has already drawn that creature on its own row,
+		// so repeating it reads as a rendering fault rather than as detail.
+		alone := len(view.Residents) == 1
 		for _, resident := range view.Residents {
 			pet := identity.For(resident.Session)
 			tone, note := hue(pet.Color), ""
@@ -126,8 +129,12 @@ func Party(views []View, settings config.Config, showAll bool, now time.Time) st
 			} else if resident.JustArrived(now) {
 				note = dim + " · just arrived" + reset
 			}
+			creature, species := pad(pet.Prefix+view.face()+pet.Suffix, 9), pad(pet.Name, 8)
+			if alone {
+				creature, species = pad("", 9), pad("", 8)
+			}
 			fmt.Fprintf(&out, "       %s%s %s%s  %s%s%s%s\n",
-				tone, pad(pet.Prefix+view.face()+pet.Suffix, 9), pad(pet.Name, 8), reset,
+				tone, creature, species, reset,
 				dim, pad(truncate(resident.Label(), 36), 38), since(resident.Seen, now), note)
 		}
 	}

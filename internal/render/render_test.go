@@ -5,6 +5,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/TevvvB/parallel-harness-pets/internal/agents"
 	"github.com/TevvvB/parallel-harness-pets/internal/config"
 	"github.com/TevvvB/parallel-harness-pets/internal/identity"
 	"github.com/TevvvB/parallel-harness-pets/internal/score"
@@ -237,5 +238,31 @@ func TestPlacesGridAlignsAndWraps(t *testing.T) {
 	}
 	if Places(nil) != "" {
 		t.Error("an empty roster still rendered a grid")
+	}
+}
+
+// A den with one resident drew its creature on both lines, which reads as a
+// rendering fault. Confirmed in real use across four dens on one screen.
+func TestPartyDoesNotRepeatTheCreatureOfALoneResident(t *testing.T) {
+	now := time.Now()
+	den := view("feat/solo", 5, false)
+	den.Den = "place:solo#solo"
+	den.Residents = []agents.Record{{Session: "solo-session", Den: den.Den, Seen: now, Since: now}}
+
+	rendered := stripANSI(Party([]View{den}, config.Default(), false, now))
+	body := identity.For("solo-session").Prefix
+	if count := strings.Count(rendered, body); count != 1 {
+		t.Errorf("resident's creature drawn %d times, want once\n%s", count, rendered)
+	}
+
+	// Two residents still need their own creatures, or the rows stop being
+	// distinguishable, which is the whole point of listing them.
+	den.Residents = append(den.Residents,
+		agents.Record{Session: "second-session", Den: den.Den, Seen: now, Since: now})
+	rendered = stripANSI(Party([]View{den}, config.Default(), false, now))
+	for _, session := range []string{"solo-session", "second-session"} {
+		if !strings.Contains(rendered, identity.For(session).Name) {
+			t.Errorf("resident %q lost its species in a shared den\n%s", session, rendered)
+		}
 	}
 }

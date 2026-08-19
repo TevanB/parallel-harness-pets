@@ -3,7 +3,8 @@
 </p>
 
 <p align="center">
-  <strong>A creature for every agent, in a den for every git worktree.</strong>
+  <strong>A creature for every agent session. Hatch them, collect them, and never lose
+  track of which agent is which.</strong>
 </p>
 
 <p align="center">
@@ -15,10 +16,17 @@
 
 <p align="center">
   Most terminal pets belong to <i>you</i>: one creature, nurtured over time. This one belongs
-  to an <b>agent</b>. Every worktree is a den with a name, every agent working in it gets its
-  own creature, and its mood tracks how tidy that worktree is. Six agents means six creatures
-  alive at once, each recognisable at a glance, so you always know which session you are
-  looking at and which one is in trouble.
+  to an <b>agent</b>. Every worktree is a den named after a city, every agent working in it
+  hatches its own creature, and its mood tracks how tidy that worktree is. Six agents means
+  six creatures alive at once, each recognisable at a glance, so you always know which session
+  you are looking at and which one is in trouble.
+</p>
+
+<p align="center">
+  There are <b>41 species across five rarity bands</b>, with shiny variants and 16 cities to
+  work in. A creature is a hash of the session, so nothing is picked and nothing is saved -
+  you get what you roll. Running more agents in more worktrees is how the collection fills,
+  and <code>pets den</code> is where you see what you have found.
 </p>
 
 <div align="center">
