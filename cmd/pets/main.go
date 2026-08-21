@@ -108,6 +108,10 @@ type hookPayload struct {
 	Model struct {
 		DisplayName string `json:"display_name"`
 	} `json:"model"`
+	// The only genuinely per-agent signal here: mood comes from the worktree and is shared.
+	ContextWindow struct {
+		UsedPercentage int `json:"used_percentage"`
+	} `json:"context_window"`
 	ToolInput struct {
 		Command string `json:"command"`
 	} `json:"tool_input"`
@@ -123,6 +127,7 @@ type agent struct {
 	Repo      string
 	Worktree  string
 	Model     string
+	Context   int
 }
 
 func (p hookPayload) agent() agent {
@@ -132,6 +137,7 @@ func (p hookPayload) agent() agent {
 		Repo:      p.Workspace.Repo.Name,
 		Worktree:  p.Workspace.GitWorktree,
 		Model:     p.Model.DisplayName,
+		Context:   p.ContextWindow.UsedPercentage,
 	}
 }
 
@@ -209,6 +215,7 @@ func registerAgent(cacheDir string, repo gitrepo.Repo, who agent, now time.Time)
 		Root:    repo.Root,
 		Branch:  repo.Branch,
 		Name:    who.Name,
+		Context: who.Context,
 	}, now)
 	// Touch forgets an agent the moment it moves; the visit log is the half that does not.
 	visits.Record(cacheDir, den, who.SessionID, now)

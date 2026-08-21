@@ -144,3 +144,28 @@ func TestLabelFallsBackToTheSessionID(t *testing.T) {
 		t.Errorf("unnamed session labelled %q", unnamed)
 	}
 }
+
+// Only the status line payload carries a context window. A hook firing between two
+// status line ticks passes zero, and must not overwrite what the status line knew.
+func TestTouchKeepsAKnownContextWhenAHookReportsNone(t *testing.T) {
+	dir := t.TempDir()
+	now := time.Now()
+	record := Record{Session: "ctx-session", Den: "place:one#one", Context: 72}
+	if err := Touch(dir, record, now); err != nil {
+		t.Fatal(err)
+	}
+
+	// Past the heartbeat, so the write is not throttled, and with no context.
+	later := now.Add(2 * Heartbeat)
+	if err := Touch(dir, Record{Session: "ctx-session", Den: "place:one#one"}, later); err != nil {
+		t.Fatal(err)
+	}
+
+	live := All(dir, later)
+	if len(live) != 1 {
+		t.Fatalf("register holds %d agents, want 1", len(live))
+	}
+	if live[0].Context != 72 {
+		t.Errorf("context is %d after a hook reported none, want 72 preserved", live[0].Context)
+	}
+}
