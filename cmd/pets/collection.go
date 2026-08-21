@@ -126,6 +126,11 @@ func hatchCommand() {
 	}
 	// Ahead of the marker check, which returns for any worktree that hatched before.
 	registerAgent(cacheDir, repo, payload.agent(), time.Now())
+	// pets party lists worktrees that have state, and joins agents onto them, so
+	// registering without probing leaves a live session in the register and absent
+	// from the listing. Session start is also when fresh state is most wanted, and
+	// probe self-throttles behind a lock.
+	probe(repo.Root, settings)
 	marker := hatchMarker(cacheDir, repo.Key())
 	if _, err := os.Stat(marker); err == nil {
 		return
