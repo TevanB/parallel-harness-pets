@@ -133,9 +133,10 @@ func Party(views []View, settings config.Config, showAll bool, now time.Time) st
 			if alone {
 				creature, species = pad("", 9), pad("", 8)
 			}
-			fmt.Fprintf(&out, "       %s%s %s%s  %s%s%s%s\n",
+			fmt.Fprintf(&out, "       %s%s %s%s  %s%s%s%s%s\n",
 				tone, creature, species, reset,
-				dim, pad(truncate(resident.Label(), 36), 38), since(resident.Seen, now), note)
+				dim, pad(truncate(resident.Label(), 36), 38), since(resident.Seen, now), note,
+				contextNote(resident.Context))
 		}
 	}
 

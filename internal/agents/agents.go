@@ -51,6 +51,8 @@ type Record struct {
 	// Since says how long it has been here, which is a different question once
 	// an agent can move between worktrees.
 	Since time.Time
+	// Context is the context window's fill percentage; zero means unknown, since only the status line reports it.
+	Context int
 }
 
 func (r Record) Stale(now time.Time) bool { return now.Sub(r.Seen) >= StaleAfter }
@@ -100,6 +102,10 @@ func Touch(stateDir string, record Record, now time.Time) error {
 	path := filepath.Join(dir(stateDir), fileName(record.Session))
 	record.Since = now
 	if existing, err := read(path); err == nil {
+		// A hook carries no context window, and must not reset what the status line knew.
+		if record.Context == 0 {
+			record.Context = existing.Context
+		}
 		if existing.Den == record.Den {
 			// Same den, so the arrival time carries over rather than being reset
 			// by every heartbeat.
@@ -116,10 +122,11 @@ func Touch(stateDir string, record Record, now time.Time) error {
 	}
 	record.Seen = now
 	var out strings.Builder
-	fmt.Fprintf(&out, "session=%s\nden=%s\nroot=%s\nbranch=%s\nname=%s\nts=%d\nsince=%d\n",
+	fmt.Fprintf(&out, "session=%s\nden=%s\nroot=%s\nbranch=%s\nname=%s\nts=%d\nsince=%d\ncontext=%d\n",
 		record.Session, record.Den, record.Root, record.Branch,
 		// A newline in a session name would forge a second field on read.
-		strings.ReplaceAll(record.Name, "\n", " "), record.Seen.Unix(), record.Since.Unix())
+		strings.ReplaceAll(record.Name, "\n", " "), record.Seen.Unix(), record.Since.Unix(),
+		record.Context)
 	temporary := path + ".tmp"
 	if err := os.WriteFile(temporary, []byte(out.String()), 0o644); err != nil {
 		return err
@@ -174,6 +181,12 @@ func read(path string) (Record, error) {
 				return Record{}, err
 			}
 			record.Seen = time.Unix(seconds, 0)
+		case "context":
+			percent, err := strconv.Atoi(strings.TrimSpace(value))
+			if err != nil {
+				return Record{}, err
+			}
+			record.Context = percent
 		case "since":
 			seconds, err := strconv.ParseInt(strings.TrimSpace(value), 10, 64)
 			if err != nil {

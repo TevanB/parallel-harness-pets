@@ -247,6 +247,21 @@ func since(then, now time.Time) string {
 //
 // This is the view the old model could not express: a worktree held one
 // creature, so a second agent in the same worktree was invisible.
+// ContextFull is where the figure stops being dim and starts warning: an agent near the end of its window is actionable.
+const ContextFull = 80
+
+// contextNote renders the fill, or nothing when unknown, so a hook-only harness is never shown a confident 0%.
+func contextNote(percent int) string {
+	if percent <= 0 {
+		return ""
+	}
+	tone := dim
+	if percent >= ContextFull {
+		tone = warn
+	}
+	return fmt.Sprintf(" %s· %d%%%s", tone, percent, reset)
+}
+
 func Residents(v View, now time.Time) string {
 	if len(v.Residents) == 0 {
 		return ""
@@ -286,10 +301,11 @@ func Residents(v View, now time.Time) string {
 		} else if resident.JustArrived(now) {
 			note = dim + "  just arrived" + reset
 		}
-		fmt.Fprintf(&out, "  %s%s%s%s  %s%s%s  %s%s%s%s\n",
+		fmt.Fprintf(&out, "  %s%s%s%s  %s%s%s  %s%s%s%s%s\n",
 			marker, tone, pad(body, width), reset,
 			tone, pad(pet.Name, 9), reset,
-			dim, pad(truncate(resident.Label(), 32), 34), since(resident.Seen, now), note)
+			dim, pad(truncate(resident.Label(), 32), 34), since(resident.Seen, now), note,
+			contextNote(resident.Context))
 	}
 	return out.String()
 }
