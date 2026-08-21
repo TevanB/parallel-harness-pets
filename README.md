@@ -144,6 +144,7 @@ run something else and it works, or does not, please open an issue.
 | `⑂2` | 2 heads in one migration tree |
 | `✗` | last test or lint run failed |
 | `-.-` with `·····` | still waking up, in the first second of a session |
+| `· 72%` | how full that agent's context window is, on its row in `pets party` and `pets card`. Dim until 80%, then it warns. Absent when the harness does not report one |
 
 You start at five hearts and lose one for any uncommitted file, another past 15,
 one for any unpushed commit, another past 5, and two for a failing test run. All
@@ -152,6 +153,10 @@ of it is configurable.
 Test results are only recorded when a runner says outright how it went, and a
 result older than two hours is forgotten, so a red mark never haunts a branch
 you already fixed.
+
+Mood belongs to the worktree, so every agent working in one shares it. Context fill is
+the exception: it is per agent, which is why it sits on the agent's row rather than in
+the face.
 
 ## Seeing every worktree at once
 
