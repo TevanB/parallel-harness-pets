@@ -1,11 +1,19 @@
 # Releasing
 
+First bump the plugin's version in both manifests, then tag:
+
 ```sh
+# plugin/.claude-plugin/plugin.json and .claude-plugin/marketplace.json (two places in that one)
 git tag -a vX.Y.Z -m "…" && git push origin vX.Y.Z
 ```
 
-That is the whole thing. The release workflow builds every platform and
-publishes the archives and checksums.
+The release workflow builds every platform and publishes the archives and checksums.
+
+**The plugin bump is not optional and the workflow enforces it.** Claude Code only offers
+an update when `plugin.json`'s `version` changes, so leaving it behind pins every plugin
+user on whatever they installed. It drifted three releases before anyone noticed, so the
+release now fails on a mismatch rather than trusting the habit. If it fails, fix the
+manifests, delete the tag, and tag again.
 
 ## The Homebrew cask updates itself
 
